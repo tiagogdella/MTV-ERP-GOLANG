@@ -42,6 +42,20 @@ Convenções:
 - [ ] Desenhar diagrama entidade-relacionamento simplificado dos 4 serviços de domínio (catalog, inventory, purchasing + auth) mostrando como os IDs cruzam entre bounded contexts (sem FK cross-database — anotar que a referência é lógica, não física)
   📚 Estudar: como referenciar entidades entre bounded contexts sem FK física (ID como referência fraca + validação assíncrona/eventual)
 
+### Fluxos de usabilidade
+*(adicionado em 2026-08-24 — validar o fluxo humano de cada RF antes de desenhar tela ou escrever código, usando `docs/requisitos.md` como base)*
+- [ ] Desenhar (Mermaid `flowchart`) o fluxo de uso de "Lançar compra" (RF-PUR-1)
+- [ ] Desenhar o fluxo de "Cadastrar pedido de venda" (RF-VEN-1) e "Faturar pedido de venda" (RF-VEN-2) — incluir o caso de quantidade faturada divergente do pedido
+- [ ] Desenhar o fluxo de cadastro de produto e unidade de comercialização (RF-CAT-1, RF-CAT-6)
+- [ ] Desenhar o fluxo de consulta de estoque e rastreabilidade de lote (RF-INV-3, RF-INV-5)
+- [ ] Revisar os fluxos desenhados contra `docs/requisitos.md` — todo RF relevante ao MVP deveria ter um fluxo correspondente antes de seguir pro design
+
+### Design de interface (Claude Design)
+*(adicionado em 2026-08-24 — só começa depois dos fluxos de usabilidade acima, pra não gerar tela genérica desgarrada do fluxo real)*
+- [ ] Escrever prompt para o Claude Design cobrindo: papéis (admin/operador), telas do MVP, o fluxo de cada uma (baseado nos fluxos acima) e o contexto de uso (ferramenta interna, poucos usuários simultâneos, prioridade em densidade de informação e velocidade de digitação sobre estética)
+- [ ] Gerar o design e revisar contra os fluxos desenhados
+- [ ] Ajustar `docs/requisitos.md` ou os fluxos se o design revelar alguma lacuna de regra de negócio
+
 ---
 
 ## 🏗️ Fase 2 — Fundação técnica
@@ -143,13 +157,13 @@ Convenções:
 - [ ] Deploy no k8s + validação de métricas/traces
 
 ### purchasing-service
+*(atualizado em 2026-08-24 — sem "pedido de compra" como entidade separada, ver RF-PUR-1 em `docs/requisitos.md`: compra é lançada num único passo)*
 - [ ] Clonar template pra `purchasing-service`
-- [ ] Modelar entidade `PurchaseOrder` (pedido de compra — fornecedor, itens, status)
-- [ ] Modelar entidade `Receiving` (recebimento — vinculado a um pedido de compra, dados de safra/origem que viram lote)
-- [ ] Escrever proto `purchasing.proto` (RPCs: CreatePurchaseOrder, RegisterReceiving)
-- [ ] Migrations + queries sqlc (purchase_orders, receivings)
-- [ ] Implementar lógica de recebimento: ao registrar um `Receiving`, chamar (via gRPC síncrono, por enquanto) o inventory-service pra **criar ou atualizar o lote correspondente** antes de confirmar o recebimento
-- [ ] Testes unitários e de integração do fluxo compra → recebimento → lote criado no inventory
+- [ ] Modelar entidade `Purchase` (compra — fornecedor, produto/quantidade/unidade, dados da nota fiscal de entrada, tudo lançado de uma vez)
+- [ ] Escrever proto `purchasing.proto` (RPC: CreatePurchase)
+- [ ] Migrations + queries sqlc (purchases)
+- [ ] Implementar lógica de lançamento: ao registrar uma `Purchase`, chamar (via gRPC síncrono, por enquanto) o inventory-service pra **criar o lote correspondente** antes de confirmar a compra
+- [ ] Testes unitários e de integração do fluxo compra lançada → lote criado no inventory
 - [ ] Deploy no k8s + validação de métricas/traces
 
 ---
@@ -177,8 +191,8 @@ Convenções:
 ### Telas mínimas do MVP
 - [ ] Tela de login (consome auth-service via gateway)
 - [ ] Tela de listagem/cadastro de produtos e unidades de medida (catalog)
-- [ ] Tela de consulta de estoque por produto/lote (inventory)
-- [ ] Tela de criação de pedido de compra e registro de recebimento (purchasing)
+- [ ] Tela de consulta de estoque por produto/lote, incluindo rastreabilidade (inventory)
+- [ ] Tela de lançamento de compra — passo único (purchasing, ver RF-PUR-1)
 - [ ] Deploy do frontend (build estático ou SSR no k8s, conforme decisão de infra)
 
 ---
@@ -186,15 +200,16 @@ Convenções:
 ## 🔄 Fase 6 — Mensageria e sagas
 
 ### Primeira comunicação assíncrona
-- [ ] Definir schema do evento `MercadoriaRecebida` (payload: lote, produto, quantidade em kg, timestamp)
+*(evento renomeado em 2026-08-24 de `MercadoriaRecebida` pra `CompraLançada`, refletindo o lançamento em passo único — ver RF-PUR-1)*
+- [ ] Definir schema do evento `CompraLançada` (payload: lote, produto, quantidade em kg, timestamp)
   📚 Estudar: versionamento de eventos em mensageria — como evoluir o schema de um evento sem quebrar consumidores antigos
-- [ ] Trocar a chamada síncrona gRPC de recebimento (Fase 4) por publish do evento `MercadoriaRecebida` via NATS no purchasing-service
-- [ ] Implementar subscriber do evento no inventory-service (cria/atualiza lote a partir do evento recebido)
+- [ ] Trocar a chamada síncrona gRPC de lançamento de compra (Fase 4) por publish do evento `CompraLançada` via NATS no purchasing-service
+- [ ] Implementar subscriber do evento no inventory-service (cria o lote a partir do evento recebido)
 - [ ] Implementar idempotência no consumidor (mesmo evento processado duas vezes não duplica lote)
   📚 Estudar: idempotência em consumidores de mensageria — chave de deduplicação, at-least-once delivery do NATS
 - [ ] Testar cenário de falha: inventory-service fora do ar durante publish — validar que a mensagem não se perde (JetStream com persistência, se aplicável)
   📚 Estudar: NATS Core vs JetStream — quando vale a pena usar JetStream (persistência, replay) em vez do Core pub/sub
-- [ ] Documentar o fluxo assíncrono resultante num ADR-0007: "Recebimento de mercadoria via evento assíncrono (NATS)"
+- [ ] Documentar o fluxo assíncrono resultante num ADR-0007: "Lançamento de compra via evento assíncrono (NATS)"
 
 ### Observabilidade da mensageria
 - [ ] Propagar trace context através do evento NATS (correlacionar span do publish com o do consumo)
@@ -235,12 +250,12 @@ Perguntas de negócio que preciso validar com a empresa antes (ou durante) de mo
 
 - [ ] Contratos de fornecimento de longo prazo ou só compra pontual por pedido?
 - [ ] Múltiplos depósitos/armazéns ou depósito único no início?
-- [ ] Existe alçada de aprovação para pedidos de compra acima de um valor X?
+- [x] Existe alçada de aprovação para pedidos de compra acima de um valor X? → **Não.** Resolvido em `docs/requisitos.md` (RF-PUR-1): compra lançada num único passo, sem aprovação.
 - [ ] Existe limite de crédito por cliente (relevante pro futuro sales-service)?
 - [ ] Frete: CIF ou FOB — quem contrata a transportadora?
 - [ ] Quais formas de pagamento são aceitas (boleto, transferência, prazo)?
 - [ ] Existe controle de qualidade no recebimento (umidade, impureza, quebra de grão)? Isso afeta o modelo de `Lot`?
-- [ ] Política de precificação: preço é por unidade de venda (fardo/saco/pacote) ou sempre por kg? O preço pode variar por lote (safra) ou é fixo por produto?
+- [x] Política de precificação: preço é por unidade de venda (fardo/saco/pacote) ou sempre por kg? O preço pode variar por lote (safra) ou é fixo por produto? → **Variável.** Resolvido em `docs/requisitos.md` (RF-VEN-1/RN5): preço é sempre manual, decidido pedido a pedido, não é fixo por produto.
 
 ---
 
