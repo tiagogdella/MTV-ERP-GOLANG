@@ -10,7 +10,7 @@
 
 ```mermaid
 flowchart TD
-    A[Operador abre "Lançar Compra"] --> B[Seleciona fornecedor]
+    A[Operador abre tela Lançar Compra] --> B[Seleciona fornecedor]
     B --> C{Fornecedor já existe?}
     C -- Não --> C1[Cadastra fornecedor ali mesmo — RF-CAT-4]
     C -- Sim --> C2[Seleciona da lista]
@@ -27,7 +27,7 @@ flowchart TD
     I -- Não --> I1[Mostra erro, mantém formulário preenchido]
     I -- Sim --> J[Sistema cria um lote por produto lançado, associa quantidade em kg]
     J --> K[Estoque atualizado — RF-INV-1]
-    K --> L[Confirma: "Compra lançada" + mostra lote(s) criado(s)]
+    K --> L[Confirma compra lançada e mostra lotes criados]
 ```
 
 **Validado (2026-08-24):** compra pode ter mais de um produto (um lote por produto); bloqueio de nota fiscal duplicada por fornecedor+número, refletido no `requisitos.md` (RF-PUR-1/RN1, RN3, RN6).
@@ -38,7 +38,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Vendedor abre "Cadastrar Pedido de Venda"] --> B[Seleciona cliente]
+    A[Vendedor abre tela Cadastrar Pedido de Venda] --> B[Seleciona cliente]
     B --> C{Cliente já existe?}
     C -- Não --> C1[Cadastra cliente ali mesmo — RF-CAT-5]
     C -- Sim --> C2[Seleciona da lista]
@@ -47,12 +47,12 @@ flowchart TD
     D --> E{Quer adicionar outro produto no pedido?}
     E -- Sim --> D
     E -- Não --> F[Confirma pedido]
-    F --> G[Pedido salvo como "em aberto" — entra na projeção de caixa RF-VEN-4]
+    F --> G[Pedido salvo, status em aberto — entra na projeção de caixa RF-VEN-4]
 
     G -.antes de faturar.-> H{O que acontece com o pedido em aberto?}
     H -- Alterar --> D
     H -- Cancelar --> H1[Pedido cancelado — some da projeção, fica no histórico RF-VEN-1/RN4]
-    H -- Faturar --> I[Abre "Faturar Pedido de Venda"]
+    H -- Faturar --> I[Abre tela Faturar Pedido de Venda]
 
     S[Venda direta, sem pedido prévio] --> I
     I --> I2{Vincula a um pedido existente ou cria um novo na hora?}
@@ -68,7 +68,7 @@ flowchart TD
     N --> O[Gera título a receber — RF-FIN-1]
     O --> P[Emite boleto junto, se a forma de pagamento exigir — RF-VEN-2/RN4]
     P --> Q[Pedido fecha por completo, mesmo com quantidade diferente da pedida — RF-VEN-2/RN5]
-    Q --> R[Confirma: "Venda faturada"]
+    Q --> R[Confirma venda faturada]
 ```
 
 **Validado (2026-08-24):**
@@ -81,7 +81,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Operador abre "Cadastrar Produto"] --> B[Informa nome/tipo do produto]
+    A[Operador abre tela Cadastrar Produto] --> B[Informa nome/tipo do produto]
     B --> C[Associa unidade de comercialização]
     C --> D{Unidade já existe?}
     D -- Sim --> E[Seleciona da lista]
