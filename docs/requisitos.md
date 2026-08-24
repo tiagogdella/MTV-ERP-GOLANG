@@ -1,4 +1,4 @@
-# Requisitos — ERP Arroz (Migra Alimentos)
+# Requisitos — ERP Arroz (MTV)
 
 > Rascunho gerado a partir do event storming inicial, refinado com as decisões de negócio abaixo. Itens ainda com `⚠️ REVISAR` seguem em aberto — o resto já reflete decisão tomada.
 
