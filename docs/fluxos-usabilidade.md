@@ -1,4 +1,4 @@
-# Fluxos de usabilidade — ERP Arroz (Migra Alimentos)
+# Fluxos de usabilidade — ERP Arroz (MTV)
 
 > Um fluxo por RF relevante do MVP, validado um de cada vez antes de seguir pro design (Claude Design). Baseado em `docs/requisitos.md`.
 
