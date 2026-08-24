@@ -98,3 +98,76 @@ flowchart TD
 ```
 
 **Validado (2026-08-24):** cadastro auxiliar sempre embutido na tela que depende dele — padronizado em todos os fluxos (ver nota no topo do arquivo). Fluxo 1 (fornecedor) e Fluxo 2 (cliente) já ajustados pro mesmo padrão.
+
+---
+
+## Fluxo 4: Consultar estoque, rastreabilidade e ajuste manual (RF-INV-3, RF-INV-4, RF-INV-5)
+
+```mermaid
+flowchart TD
+    A[Operador abre tela Consultar Estoque] --> B{Buscar por produto ou por lote?}
+    B -- Produto --> C[Seleciona produto]
+    C --> D[Mostra total em kg do produto + lista de lotes com saldo cada]
+    B -- Lote --> E[Busca pelo código do lote]
+    E --> D2[Mostra saldo em kg daquele lote]
+
+    D --> F[Seleciona um lote da lista]
+    F --> G{O que fazer com esse lote?}
+    D2 --> G
+
+    G -- Ver rastreabilidade --> H[Mostra origem: fornecedor, compra, data — RF-INV-5]
+    H --> I[Mostra todos os destinos: vendas, trocas, ajustes associados a esse lote]
+
+    G -- Ajustar estoque --> J[Informa quantidade do ajuste, positiva ou negativa]
+    J --> K[Informa justificativa — obrigatória, RF-INV-4/RN1]
+    K --> L[Confirma ajuste]
+    L --> M[Sistema registra movimentação vinculada ao lote, atualiza saldo]
+    M --> N[Registra autor + timestamp do ajuste — RNF9]
+```
+
+**Notas:**
+- Ajuste manual pode somar ou subtrair estoque (perda/quebra reduz, contagem física a mais soma) — já implícito em RF-INV-4, não precisou de decisão nova.
+- Ajuste liberado pra qualquer operador, mesmo padrão de liberdade já definido pra faturamento (RF-VEN-2/RN6) — assumi por consistência, me avisa se quiser restringir só pra esse caso.
+
+---
+
+## Fluxo 5: Login e sessão (RF-AUTH-2, RF-AUTH-3)
+
+```mermaid
+flowchart TD
+    A[Usuário abre tela de Login] --> B[Informa e-mail e senha]
+    B --> C[Confirma]
+    C --> D{Credenciais válidas?}
+    D -- Não --> D1[Erro genérico: e-mail ou senha inválidos, sem dizer qual — RF-AUTH-2/RN1]
+    D1 --> B
+    D -- Sim --> E[Sistema gera token JWT com expiração — RF-AUTH-2/RN2]
+    E --> F[Redireciona pra tela inicial]
+
+    F -.durante o uso.-> G[Toda chamada ao gateway valida o token]
+    G --> H{Token válido e não expirado?}
+    H -- Sim --> I[Chamada segue normalmente — RF-AUTH-3]
+    H -- Não --> J[Bloqueia chamada, desloga, volta pra tela de Login]
+```
+
+**Nota:** não desenhei fluxo de "esqueci minha senha" — não existe RF pra isso hoje (RF-AUTH só tem cadastrar/autenticar/validar). Pra 4-5 usuários, provavelmente o `admin` resolve resetando a senha diretamente por fora do sistema, mas se você quiser isso como funcionalidade formal, é um RF novo em `requisitos.md`. Deixo como está, só avisando — não acho que trava o MVP.
+
+Com esse, os **5 fluxos do MVP estão fechados**: compra, pedido de venda + faturamento, catálogo, estoque/rastreabilidade, e login.
+
+---
+
+## Revisão final (2026-08-24)
+
+Conferido cada RF do MVP (não pós-MVP) contra os 5 fluxos acima:
+
+| RF | Coberto por |
+|---|---|
+| RF-AUTH-1 Cadastrar usuário | **Não desenhado** — mesmo padrão de formulário simples já repetido 3x (fornecedor, cliente, produto); não achei que valia um 6º diagrama igual |
+| RF-AUTH-2/3 Login e sessão | Fluxo 5 |
+| RF-CAT-1/2/6/7 Produto, unidade, inativar, editar | Fluxo 3 |
+| RF-CAT-3 Consultar catálogo | **Não desenhado** — é só listagem/busca simples, sem decisão de fluxo relevante |
+| RF-CAT-4/5 Fornecedor, cliente | Embutido nos Fluxos 1 e 2 (RNF10) |
+| RF-PUR-1 Lançar compra | Fluxo 1 |
+| RF-INV-1/2 Atualizar/baixar estoque | Consequência automática dos Fluxos 1 e 2, sem tela própria |
+| RF-INV-3/4/5 Consultar, ajustar, rastrear | Fluxo 4 |
+
+Os dois "não desenhados" são deliberados, não esquecidos: telas de formulário/listagem simples que não têm decisão de UX nova pra validar — desenhar deixaria de ser útil e viraria repetição. Se qualquer um dos dois esconder alguma regra que só aparece na hora de fazer a tela, dá pra voltar aqui.
