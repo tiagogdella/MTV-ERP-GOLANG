@@ -43,12 +43,13 @@ Convenções:
   📚 Estudar: como referenciar entidades entre bounded contexts sem FK física (ID como referência fraca + validação assíncrona/eventual)
 
 ### Fluxos de usabilidade
-*(adicionado em 2026-08-24 — validar o fluxo humano de cada RF antes de desenhar tela ou escrever código, usando `docs/requisitos.md` como base)*
-- [ ] Desenhar (Mermaid `flowchart`) o fluxo de uso de "Lançar compra" (RF-PUR-1)
-- [ ] Desenhar o fluxo de "Cadastrar pedido de venda" (RF-VEN-1) e "Faturar pedido de venda" (RF-VEN-2) — incluir o caso de quantidade faturada divergente do pedido
-- [ ] Desenhar o fluxo de cadastro de produto e unidade de comercialização (RF-CAT-1, RF-CAT-6)
-- [ ] Desenhar o fluxo de consulta de estoque e rastreabilidade de lote (RF-INV-3, RF-INV-5)
-- [ ] Revisar os fluxos desenhados contra `docs/requisitos.md` — todo RF relevante ao MVP deveria ter um fluxo correspondente antes de seguir pro design
+*(adicionado em 2026-08-24 — validar o fluxo humano de cada RF antes de desenhar tela ou escrever código, usando `docs/requisitos.md` como base; concluído em 2026-08-24, ver `docs/fluxos-usabilidade.md`)*
+- [x] Desenhar (Mermaid `flowchart`) o fluxo de uso de "Lançar compra" (RF-PUR-1)
+- [x] Desenhar o fluxo de "Cadastrar pedido de venda" (RF-VEN-1) e "Faturar pedido de venda" (RF-VEN-2) — incluir o caso de quantidade faturada divergente do pedido
+- [x] Desenhar o fluxo de cadastro de produto e unidade de comercialização (RF-CAT-1, RF-CAT-6)
+- [x] Desenhar o fluxo de consulta de estoque e rastreabilidade de lote (RF-INV-3, RF-INV-5)
+- [x] Desenhar o fluxo de login e sessão (RF-AUTH-2, RF-AUTH-3) — adicionado durante a validação, tela mínima da Fase 5 que não tinha entrado na lista original
+- [x] Revisar os fluxos desenhados contra `docs/requisitos.md` — todo RF relevante ao MVP tem fluxo correspondente ou foi marcado como dispensável por repetir padrão já coberto (ver seção "Revisão final" em `docs/fluxos-usabilidade.md`)
 
 ### Design de interface (Claude Design)
 *(adicionado em 2026-08-24 — só começa depois dos fluxos de usabilidade acima, pra não gerar tela genérica desgarrada do fluxo real)*
