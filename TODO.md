@@ -60,10 +60,13 @@ Convenções:
 - [x] Revisar os fluxos desenhados contra `docs/requisitos.md` — todo RF relevante ao MVP tem fluxo correspondente ou foi marcado como dispensável por repetir padrão já coberto (ver seção "Revisão final" em `docs/fluxos-usabilidade.md`)
 
 ### Design de interface (Claude Design)
-*(adicionado em 2026-08-24 — só começa depois dos fluxos de usabilidade acima, pra não gerar tela genérica desgarrada do fluxo real)*
-- [ ] Escrever prompt para o Claude Design cobrindo: papéis (admin/operador), telas do MVP, o fluxo de cada uma (baseado nos fluxos acima) e o contexto de uso (ferramenta interna, poucos usuários simultâneos, prioridade em densidade de informação e velocidade de digitação sobre estética)
-- [ ] Gerar o design e revisar contra os fluxos desenhados
-- [ ] Ajustar `docs/requisitos.md` ou os fluxos se o design revelar alguma lacuna de regra de negócio
+*(adicionado em 2026-08-24 — só começa depois dos fluxos de usabilidade acima, pra não gerar tela genérica desgarrada do fluxo real; concluído em 2026-08-25)*
+- [x] Escrever prompt para o Claude Design cobrindo: papéis (admin/operador), telas do MVP, o fluxo de cada uma (baseado nos fluxos acima) e o contexto de uso (ferramenta interna, poucos usuários simultâneos, prioridade em densidade de informação e velocidade de digitação sobre estética)
+  *(feito direto como canvas, sem prompt intermediário — ver nota abaixo)*
+- [x] Gerar o design e revisar contra os fluxos desenhados
+  *(protótipo clicável com as 6 telas do MVP, publicado como Artifact — login, lançar compra, pedido de venda, faturar venda, cadastrar produto, consultar estoque)*
+- [x] Ajustar `docs/requisitos.md` ou os fluxos se o design revelar alguma lacuna de regra de negócio
+  *(nenhuma lacuna nova — desenhar as telas confirmou que os fluxos já validados cobriam o necessário)*
 
 ---
 
