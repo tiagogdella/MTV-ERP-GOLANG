@@ -73,11 +73,12 @@ Convenções:
 ## 🏗️ Fase 2 — Fundação técnica
 
 ### Template reutilizável de microsserviço
-- [ ] Criar repositório/diretório `service-template` com estrutura de pastas padrão Go (cmd/, internal/, pkg/, migrations/, proto/)
+- [x] Criar repositório/diretório `service-template` com estrutura de pastas padrão Go (cmd/, internal/, pkg/, migrations/, proto/)
   📚 Estudar: Standard Go Project Layout — o que faz sentido adotar e o que é exagero pro nosso caso
 - [ ] Configurar `go.mod`, Makefile básico (build, test, run, lint) no template
-- [ ] Adicionar setup de log/slog estruturado (JSON handler) como padrão do template
-- [ ] Adicionar setup de config via env vars (sem lib externa pesada — usar stdlib `os.Getenv` + struct de config validada na inicialização)
+  *(go.mod feito; falta o Makefile)*
+- [x] Adicionar setup de log/slog estruturado (JSON handler) como padrão do template
+- [x] Adicionar setup de config via env vars (sem lib externa pesada — usar stdlib `os.Getenv` + struct de config validada na inicialização)
 - [ ] Adicionar healthcheck básico (endpoint/RPC de liveness e readiness)
 - [ ] Adicionar Dockerfile multi-stage padrão (build Go estático + imagem final mínima, ex: distroless ou alpine)
 - [ ] Adicionar setup base do OpenTelemetry (tracer provider + exporter) no template
