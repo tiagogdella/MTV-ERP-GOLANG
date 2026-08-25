@@ -16,10 +16,12 @@ Convenções:
 ## 🗺️ Fase 1 — Planejamento e modelagem
 
 ### Event storming e bounded contexts
-- [ ] Fazer event storming do fluxo completo (compra → recebimento → estoque → venda → expedição → financeiro → fiscal) num quadro (Miro/FigJam/papel mesmo)
-  📚 Estudar: Event Storming — como identificar Domain Events, Commands e Aggregates antes de desenhar bounded contexts
-- [ ] Definir os bounded contexts do MVP (auth, catalog, inventory, purchasing, gateway) e desenhar um diagrama de contexto simples (C4 Context)
+- [x] Fazer event storming do fluxo completo (compra → recebimento → estoque → venda → expedição → financeiro → fiscal) num quadro (Miro/FigJam/papel mesmo)
+  *(feito em formato diferente do previsto — RF/RN/RNF em vez de quadro de event storming clássico, ver `docs/requisitos.md`; cobre o mesmo objetivo de entender o fluxo antes de modelar contextos)*
+- [x] Definir os bounded contexts do MVP (auth, catalog, inventory, purchasing, gateway) e desenhar um diagrama de contexto simples (C4 Context)
+  *(ver `docs/contexto-c4.md` — inclui a relação com NATS/inventory e os contextos pós-MVP como caixa separada)*
 - [ ] Listar os eventos de domínio principais que vão trafegar via NATS (ex: `MercadoriaRecebida`, `LoteCriado`, `EstoqueAtualizado`) — só a lista, sem payload ainda
+  *(lista antiga ficou desatualizada pelas decisões de compra/venda — revisar contra `docs/requisitos.md` antes de fechar, ex: `MercadoriaRecebida` virou `CompraLançada`)*
 
 ### ADRs iniciais
 - [ ] Criar pasta `docs/adr/` e escrever ADR-0001: "Por que microsserviços + gRPC" (formato Michael Nygard: Title, Status, Context, Decision, Consequences)
@@ -30,12 +32,14 @@ Convenções:
 
 ### Modelagem de unidades de comercialização
 - [ ] Desenhar (papel/diagrama) o modelo de dados de `UnitOfMeasure`: fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel — cada unidade com peso-base em kg
-- [ ] Definir a regra de conversão: toda unidade tem um `fator_conversao_kg`; estoque interno sempre em kg; conversão só acontece na entrada (compra) e saída (venda/expedição)
+- [x] Definir a regra de conversão: toda unidade tem um `fator_conversao_kg`; estoque interno sempre em kg; conversão só acontece na entrada (compra) e saída (venda/expedição)
+  *(definido em `docs/requisitos.md` — RF-CAT-6, RNF5; inclui a regra extra de fator travado após uso, corrige criando unidade nova)*
 - [ ] Documentar essa modelagem num ADR-0005: "Unidade de comercialização e conversão para kg"
 
 ### Modelagem de lote (rastreabilidade)
 - [ ] Desenhar o modelo de dados de `Lot`: código do lote, safra, fornecedor de origem, data de recebimento, quantidade em kg, produto associado
-- [ ] Documentar a regra de negócio explícita: **não existe estoque sem lote associado** — toda movimentação de estoque referencia obrigatoriamente um lote
+- [x] Documentar a regra de negócio explícita: **não existe estoque sem lote associado** — toda movimentação de estoque referencia obrigatoriamente um lote
+  *(documentado em `docs/requisitos.md` — RF-PUR-1/RN3, RF-INV-1/RN1, RF-INV-4/RN2, reforçado em RF-INV-5)*
 - [ ] Escrever ADR-0006: "Rastreabilidade por lote é premissa obrigatória do modelo de dados" — justificar com o requisito de negócio (safra, origem, rastreio)
 
 ### Modelagem de dados alto nível
