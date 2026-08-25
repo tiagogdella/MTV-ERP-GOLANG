@@ -32,20 +32,23 @@ Convenções:
 - [x] ADR-0008 (novo, não previsto originalmente): "Operações modelam fato consumado, não estado pendente, por padrão" — princípio descoberto ao decidir os fluxos de compra/venda, ver `docs/adr/0008-fato-consumado-sem-estado-pendente.md`
 
 ### Modelagem de unidades de comercialização
-- [ ] Desenhar (papel/diagrama) o modelo de dados de `UnitOfMeasure`: fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel — cada unidade com peso-base em kg
+- [x] Desenhar (papel/diagrama) o modelo de dados de `UnitOfMeasure`: fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel — cada unidade com peso-base em kg
+  *(ver `docs/modelo-dados.md` — entidade `CATALOG_UNIT`)*
 - [x] Definir a regra de conversão: toda unidade tem um `fator_conversao_kg`; estoque interno sempre em kg; conversão só acontece na entrada (compra) e saída (venda/expedição)
   *(definido em `docs/requisitos.md` — RF-CAT-6, RNF5; inclui a regra extra de fator travado após uso, corrige criando unidade nova)*
 - [x] Documentar essa modelagem num ADR-0005: "Unidade de comercialização e conversão para kg"
 
 ### Modelagem de lote (rastreabilidade)
-- [ ] Desenhar o modelo de dados de `Lot`: código do lote, safra, fornecedor de origem, data de recebimento, quantidade em kg, produto associado
+- [x] Desenhar o modelo de dados de `Lot`: código do lote, safra, fornecedor de origem, data de recebimento, quantidade em kg, produto associado
+  *(ver `docs/modelo-dados.md` — entidade `INVENTORY_LOT`)*
 - [x] Documentar a regra de negócio explícita: **não existe estoque sem lote associado** — toda movimentação de estoque referencia obrigatoriamente um lote
   *(documentado em `docs/requisitos.md` — RF-PUR-1/RN3, RF-INV-1/RN1, RF-INV-4/RN2, reforçado em RF-INV-5)*
 - [x] Escrever ADR-0006: "Rastreabilidade por lote é premissa obrigatória do modelo de dados" — justificar com o requisito de negócio (safra, origem, rastreio)
 
 ### Modelagem de dados alto nível
-- [ ] Desenhar diagrama entidade-relacionamento simplificado dos 4 serviços de domínio (catalog, inventory, purchasing + auth) mostrando como os IDs cruzam entre bounded contexts (sem FK cross-database — anotar que a referência é lógica, não física)
+- [x] Desenhar diagrama entidade-relacionamento simplificado dos 4 serviços de domínio (catalog, inventory, purchasing + auth) mostrando como os IDs cruzam entre bounded contexts (sem FK cross-database — anotar que a referência é lógica, não física)
   📚 Estudar: como referenciar entidades entre bounded contexts sem FK física (ID como referência fraca + validação assíncrona/eventual)
+  *(ver `docs/modelo-dados.md` — mesmo diagrama cobre esse item e os dois de UnitOfMeasure/Lot acima, são zooms do mesmo modelo)*
 
 ### Fluxos de usabilidade
 *(adicionado em 2026-08-24 — validar o fluxo humano de cada RF antes de desenhar tela ou escrever código, usando `docs/requisitos.md` como base; concluído em 2026-08-24, ver `docs/fluxos-usabilidade.md`)*
