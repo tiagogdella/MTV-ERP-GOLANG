@@ -80,7 +80,8 @@ Convenções:
 - [x] Adicionar setup de log/slog estruturado (JSON handler) como padrão do template
 - [x] Adicionar setup de config via env vars (sem lib externa pesada — usar stdlib `os.Getenv` + struct de config validada na inicialização)
 - [x] Adicionar healthcheck básico (endpoint/RPC de liveness e readiness)
-- [ ] Adicionar Dockerfile multi-stage padrão (build Go estático + imagem final mínima, ex: distroless ou alpine)
+- [x] Adicionar Dockerfile multi-stage padrão (build Go estático + imagem final mínima, ex: distroless ou alpine)
+  *(imagem final ~18.5MB, distroless — vs quase 1GB da imagem golang usada só pra compilar)*
 - [ ] Adicionar setup base do OpenTelemetry (tracer provider + exporter) no template
   📚 Estudar: OpenTelemetry Go SDK — diferença entre TracerProvider, Exporter e Span; como instrumentar gRPC automaticamente com interceptors
 - [ ] Adicionar setup base do Prometheus (endpoint `/metrics` com client_golang) no template
