@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-template-config
+  namespace: mtv-erp
+data: 
+  ENVIRONMENT: "production"
+  PORT: "8080"

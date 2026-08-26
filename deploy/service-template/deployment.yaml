@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-template
+  namespace: mtv-erp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-template
+  template:
+    metadata:
+      labels:
+        app: service-template
+    spec:
+      containers:
+        - name: service-template
+          image: service-template:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: service-template-config
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10

@@ -96,7 +96,8 @@ Convenções:
   *(API do k3s acessível direto pela rede local, sem túnel — kubeconfig copiado do servidor pra `~/.kube/config`, fora do git)*
 - [x] Criar namespace Kubernetes dedicado pro projeto no cluster
   *(namespace `mtv-erp`, definido em `deploy/base/namespace.yaml`; namespace `comprassularroz` já existente no cluster não foi tocado)*
-- [ ] Criar manifests base (Deployment, Service, ConfigMap, Secret) genéricos reutilizáveis por serviço
+- [x] Criar manifests base (Deployment, Service, ConfigMap, Secret) genéricos reutilizáveis por serviço
+  *(em `deploy/service-template/` — Deployment/Service/ConfigMap aplicados e validados no cluster real; Secret fica como molde documentado, sem segredo real ainda)*
 - [ ] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
 - [ ] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
