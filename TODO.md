@@ -89,12 +89,17 @@ Convenções:
   📚 Estudar: gRPC interceptors (unary e stream) — como compor múltiplos interceptors numa chain
 
 ### Setup de infraestrutura do projeto
-- [ ] Criar namespace Kubernetes dedicado pro projeto no cluster da empresa
+
+> **Decisão (2026-08-26):** confirmado (via SSH no servidor) que a empresa MTV **tem sim um cluster Kubernetes real** — `k3s` rodando no servidor (`tiagoserver`), com Prometheus, Grafana, node-exporter e cAdvisor já ativos via Docker no mesmo host. Primeira suposição (de que não existia) estava errada — bom ter conferido antes de montar tudo num cluster local à toa. Falta só resolver o acesso ao `kubectl` a partir da máquina de desenvolvimento (ver primeiro item abaixo).
+
+- [x] Resolver acesso ao `kubectl` a partir da máquina de dev (copiar kubeconfig do k3s, ver se a API do k3s está acessível pela rede ou só via SSH/túnel)
+  *(API do k3s acessível direto pela rede local, sem túnel — kubeconfig copiado do servidor pra `~/.kube/config`, fora do git)*
+- [ ] Criar namespace Kubernetes dedicado pro projeto no cluster
 - [ ] Criar manifests base (Deployment, Service, ConfigMap, Secret) genéricos reutilizáveis por serviço
 - [ ] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
 - [ ] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
-- [ ] Validar que Prometheus/Grafana já rodando no cluster conseguem fazer scrape de um pod de teste
+- [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
 ### CI/CD básico
 - [ ] Escolher e configurar pipeline de CI (GitHub Actions ou similar) rodando lint + testes a cada push
