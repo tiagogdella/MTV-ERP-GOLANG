@@ -98,8 +98,9 @@ Convenções:
   *(namespace `mtv-erp`, definido em `deploy/base/namespace.yaml`; namespace `comprassularroz` já existente no cluster não foi tocado)*
 - [x] Criar manifests base (Deployment, Service, ConfigMap, Secret) genéricos reutilizáveis por serviço
   *(em `deploy/service-template/` — Deployment/Service/ConfigMap aplicados e validados no cluster real; Secret fica como molde documentado, sem segredo real ainda)*
-- [ ] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
+- [x] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
+  *(decisão: StatefulSet simples, sem operator — RNF7 não justifica a complexidade de failover/backup automático. Primeiro banco criado: `auth-db`, em `deploy/auth-db/`, credenciais via Secret criado imperativamente, nunca commitado)*
 - [ ] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
 - [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
