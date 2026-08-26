@@ -101,7 +101,8 @@ Convenções:
 - [x] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
   *(decisão: StatefulSet simples, sem operator — RNF7 não justifica a complexidade de failover/backup automático. Primeiro banco criado: `auth-db`, em `deploy/auth-db/`, credenciais via Secret criado imperativamente, nunca commitado)*
-- [ ] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
+- [x] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
+  *(Deployment + Service em `deploy/nats/`, validado via endpoint de monitoramento em /varz)*
 - [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
 ### CI/CD básico
