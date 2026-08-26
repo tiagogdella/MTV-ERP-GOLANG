@@ -84,7 +84,7 @@ Convenções:
   *(imagem final ~18.5MB, distroless — vs quase 1GB da imagem golang usada só pra compilar)*
 - [ ] Adicionar setup base do OpenTelemetry (tracer provider + exporter) no template
   📚 Estudar: OpenTelemetry Go SDK — diferença entre TracerProvider, Exporter e Span; como instrumentar gRPC automaticamente com interceptors
-- [ ] Adicionar setup base do Prometheus (endpoint `/metrics` com client_golang) no template
+- [x] Adicionar setup base do Prometheus (endpoint `/metrics` com client_golang) no template
 - [ ] Adicionar interceptors gRPC padrão (logging, recovery de panic, tracing) no template
   📚 Estudar: gRPC interceptors (unary e stream) — como compor múltiplos interceptors numa chain
 

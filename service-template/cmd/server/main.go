@@ -7,6 +7,7 @@ import (
 
 	"mtv-erp/service-template/internal/config"
 	"mtv-erp/service-template/internal/health"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -22,6 +23,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", health.LivenessHandler)
 	mux.HandleFunc("/readyz", health.ReadinessHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	slog.Info("serviço iniciado", "service", "service-template", "env", cfg.Environment, "port", cfg.Port)
 
