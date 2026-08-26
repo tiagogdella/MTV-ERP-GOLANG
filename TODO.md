@@ -94,7 +94,8 @@ Convenções:
 
 - [x] Resolver acesso ao `kubectl` a partir da máquina de dev (copiar kubeconfig do k3s, ver se a API do k3s está acessível pela rede ou só via SSH/túnel)
   *(API do k3s acessível direto pela rede local, sem túnel — kubeconfig copiado do servidor pra `~/.kube/config`, fora do git)*
-- [ ] Criar namespace Kubernetes dedicado pro projeto no cluster
+- [x] Criar namespace Kubernetes dedicado pro projeto no cluster
+  *(namespace `mtv-erp`, definido em `deploy/base/namespace.yaml`; namespace `comprassularroz` já existente no cluster não foi tocado)*
 - [ ] Criar manifests base (Deployment, Service, ConfigMap, Secret) genéricos reutilizáveis por serviço
 - [ ] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
