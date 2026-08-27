@@ -106,9 +106,12 @@ Convenções:
 - [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
 ### CI/CD básico
-- [ ] Escolher e configurar pipeline de CI (GitHub Actions ou similar) rodando lint + testes a cada push
-- [ ] Adicionar build de imagem Docker automatizado no CI
-- [ ] Documentar (README) o fluxo de deploy manual pro k8s da empresa (sem CD automático ainda — over-engineering pro estágio atual)
+- [x] Escolher e configurar pipeline de CI (GitHub Actions ou similar) rodando lint + testes a cada push
+  *(`.github/workflows/ci.yml`, escopo hoje só cobre `service-template` — quando o `auth-service` nascer, vira matrix strategy ou job duplicado)*
+- [x] Adicionar build de imagem Docker automatizado no CI
+  *(sem push pra registro ainda — só valida que o Dockerfile builda)*
+- [x] Documentar (README) o fluxo de deploy manual pro k8s da empresa (sem CD automático ainda — over-engineering pro estágio atual)
+  *(ver `docs/deploy.md` — inclui as pegadinhas descobertas na prática: `/tmp` isolado por SSH, imagePullPolicy, rollout restart com tag `:latest`)*
 
 ### Ferramentas de desenvolvimento
 - [ ] Instalar e configurar `golang-migrate` no template (comando padrão pra criar/rodar migrations)
