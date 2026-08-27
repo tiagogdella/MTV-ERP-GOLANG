@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: service-template
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configura Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Lint (go vet)
+        run: go vet ./...
+
+      - name: Testes
+        run: go test ./...
+      
+      - name: Build
+        run: go build ./...
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: service-template
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Build da imagem Docker
+        run: docker build -t service-template:ci .
