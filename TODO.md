@@ -125,13 +125,15 @@ Convenções:
 ## 🔐 Fase 3 — Primeiro serviço (auth-service)
 
 ### Modelagem e proto
-- [ ] Definir entidades mínimas: `User`, `Role` (ex: admin, operador, financeiro — só o suficiente pro MVP)
-- [ ] Escrever `auth.proto` com RPCs: `Login`, `ValidateToken`, `CreateUser`
+- [x] Definir entidades mínimas: `User`, `Role` (ex: admin, operador, financeiro — só o suficiente pro MVP)
+  *(já decidido em `docs/modelo-dados.md`: sem tabela Role separada, é campo string em User — admin/operador, ver RF-AUTH-1/RN1)*
+- [x] Escrever `auth.proto` com RPCs: `Login`, `ValidateToken`, `CreateUser`
   📚 Estudar: protobuf schema evolution — regras de compatibilidade (campos novos sempre opcionais, nunca reaproveitar número de campo removido)
-- [ ] Gerar código Go a partir do proto com buf
+- [x] Gerar código Go a partir do proto com buf
+  *(`buf.yaml`/`buf.gen.yaml` em `auth-service/proto/`, gera pra `internal/authpb/`; `go build ./...` compilando limpo)*
 
 ### Implementação
-- [ ] Clonar o service-template pra `auth-service`
+- [x] Clonar o service-template pra `auth-service`
 - [ ] Criar migration inicial (tabela `users`, `roles`)
 - [ ] Implementar queries sqlc (create user, find by email, etc.)
 - [ ] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
