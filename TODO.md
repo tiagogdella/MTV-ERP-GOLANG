@@ -114,9 +114,10 @@ Convenções:
   *(ver `docs/deploy.md` — inclui as pegadinhas descobertas na prática: `/tmp` isolado por SSH, imagePullPolicy, rollout restart com tag `:latest`)*
 
 ### Ferramentas de desenvolvimento
+*(decisão revista em 2026-08-27: GORM no lugar de sqlc como camada de acesso a dados — recomendação do professor, banco continua Postgres; `golang-migrate` mantido para migrations versionadas em vez do `AutoMigrate` do GORM, pra não depender de inferência de schema em produção)*
 - [ ] Instalar e configurar `golang-migrate` no template (comando padrão pra criar/rodar migrations)
-- [ ] Instalar e configurar `sqlc` no template (config `sqlc.yaml`, geração de código a partir de queries SQL)
-  📚 Estudar: sqlc — como ele gera código type-safe a partir de SQL puro, diferença pra um ORM tradicional
+- [ ] Instalar e configurar `GORM` no template (conexão com Postgres via driver `gorm.io/driver/postgres`, structs de modelo por serviço)
+  📚 Estudar: GORM — Active Record vs Data Mapper, `AutoMigrate` vs migrations versionadas, N+1 em preload de associações
 - [ ] Instalar `buf` e configurar `buf.gen.yaml` pra geração de código Go a partir de `.proto`
   📚 Estudar: Buf — lint de proto, breaking change detection, geração de código
 
@@ -135,7 +136,7 @@ Convenções:
 ### Implementação
 - [x] Clonar o service-template pra `auth-service`
 - [ ] Criar migration inicial (tabela `users`, `roles`)
-- [ ] Implementar queries sqlc (create user, find by email, etc.)
+- [ ] Implementar acesso a dados com GORM (create user, find by email, etc.)
 - [ ] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
 - [ ] Implementar geração e validação de JWT
   📚 Estudar: JWT — claims padrão (exp, iat, sub), assinatura HS256 vs RS256, onde guardar a chave secreta
@@ -166,7 +167,7 @@ Convenções:
 - [ ] Modelar entidade `UnitOfMeasure` com os valores definidos na Fase 1 (fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel) e campo `peso_base_kg`
 - [ ] Implementar mecanismo de conversão: função/método que recebe quantidade + unidade e retorna quantidade em kg (e o inverso, kg → unidade de venda)
 - [ ] Escrever proto `catalog.proto` (RPCs: CRUD de Product, CRUD/list de UnitOfMeasure, RPC de conversão)
-- [ ] Migrations + queries sqlc (products, units_of_measure)
+- [ ] Migrations + modelos GORM (products, units_of_measure)
 - [ ] Implementar RPCs e testes unitários (especial atenção nos testes de conversão de unidade — casos de borda tipo fração de kg)
 - [ ] Seed de dados inicial (as unidades padrão já listadas, alguns produtos de exemplo)
 - [ ] Deploy no k8s + validação de métricas/traces (deve ser mais rápido que o auth-service, já que o template está validado)
@@ -178,7 +179,7 @@ Convenções:
 - [ ] Implementar validação de domínio explícita: **rejeitar qualquer movimentação de estoque sem lote associado** (regra de negócio, não só constraint de banco)
   📚 Estudar: onde colocar validação de invariante de domínio em Go — validação na camada de serviço vs constraint NOT NULL no banco (fazer as duas, mas a de domínio é a que dá erro de negócio claro)
 - [ ] Escrever proto `inventory.proto` (RPCs: CreateLot, RegisterMovement, GetStockByProduct, GetLotDetails)
-- [ ] Migrations + queries sqlc (lots, stock_movements)
+- [ ] Migrations + modelos GORM (lots, stock_movements)
 - [ ] Implementar RPCs com a validação de lote obrigatório
 - [ ] Testes unitários da regra "sem lote não existe estoque" (caso de erro esperado)
 - [ ] Testes de consulta de saldo de estoque agregado por produto (soma de lotes)
@@ -189,7 +190,7 @@ Convenções:
 - [ ] Clonar template pra `purchasing-service`
 - [ ] Modelar entidade `Purchase` (compra — fornecedor, produto/quantidade/unidade, dados da nota fiscal de entrada, tudo lançado de uma vez)
 - [ ] Escrever proto `purchasing.proto` (RPC: CreatePurchase)
-- [ ] Migrations + queries sqlc (purchases)
+- [ ] Migrations + modelos GORM (purchases)
 - [ ] Implementar lógica de lançamento: ao registrar uma `Purchase`, chamar (via gRPC síncrono, por enquanto) o inventory-service pra **criar o lote correspondente** antes de confirmar a compra
 - [ ] Testes unitários e de integração do fluxo compra lançada → lote criado no inventory
 - [ ] Deploy no k8s + validação de métricas/traces
@@ -302,7 +303,7 @@ Serviços que ficam pra depois da apresentação, sem detalhamento de tarefas ai
 ## 🔗 Referências úteis
 
 - [gRPC-Go](https://grpc.io/docs/languages/go/) — documentação oficial gRPC para Go
-- [sqlc](https://docs.sqlc.dev/) — geração de código SQL type-safe
+- [GORM](https://gorm.io/docs/) — ORM em Go, mapeamento de structs e queries
 - [NATS Docs](https://docs.nats.io/) — mensageria (Core e JetStream)
 - [OpenTelemetry Go](https://opentelemetry.io/docs/languages/go/) — instrumentação e tracing distribuído
 - [Focus NFe — Documentação da API](https://focusnfe.com.br/doc/) — emissão de NFe via API terceira
