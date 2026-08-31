@@ -144,7 +144,8 @@ Convenções:
 - [x] Criar migration inicial (tabela `users`, `roles`)
   *(só `users` — sem tabela `roles` separada, `role` é coluna texto, já decidido em `docs/modelo-dados.md`. Aplicada de verdade contra o `auth-db` no cluster via `golang-migrate`)*
 - [ ] Implementar acesso a dados com GORM (create user, find by email, etc.)
-- [ ] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
+- [x] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
+  *(`internal/auth/password.go` — HashPassword/CheckPassword. Testado de ponta a ponta: hash real gravado no `auth-db`, confirmado via psql)*
 - [ ] Implementar geração e validação de JWT
   📚 Estudar: JWT — claims padrão (exp, iat, sub), assinatura HS256 vs RS256, onde guardar a chave secreta
 - [ ] Implementar RPC `Login` (valida credenciais, retorna token)

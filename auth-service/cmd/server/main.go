@@ -26,7 +26,7 @@ func main() {
 		slog.Error("falha ao conectar no banco", "error", err)
 		os.Exit(1)
 	}
-	_ = database
+	_ = database	
 
 	slog.Info("conectado ao banco de dados")
 
