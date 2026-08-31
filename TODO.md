@@ -140,7 +140,8 @@ Convenções:
 
 ### Implementação
 - [x] Clonar o service-template pra `auth-service`
-- [ ] Criar migration inicial (tabela `users`, `roles`)
+- [x] Criar migration inicial (tabela `users`, `roles`)
+  *(só `users` — sem tabela `roles` separada, `role` é coluna texto, já decidido em `docs/modelo-dados.md`. Aplicada de verdade contra o `auth-db` no cluster via `golang-migrate`)*
 - [ ] Implementar acesso a dados com GORM (create user, find by email, etc.)
 - [ ] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
 - [ ] Implementar geração e validação de JWT
