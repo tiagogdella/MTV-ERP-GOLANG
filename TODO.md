@@ -19,8 +19,8 @@ Convenções:
 - [x] Fazer event storming do fluxo completo (compra → recebimento → estoque → venda → expedição → financeiro → fiscal) num quadro (Miro/FigJam/papel mesmo)
   *(feito em formato diferente do previsto — RF/RN/RNF em vez de quadro de event storming clássico, ver `docs/requisitos.md`; cobre o mesmo objetivo de entender o fluxo antes de modelar contextos)*
 - [x] Definir os bounded contexts do MVP (auth, catalog, inventory, purchasing, gateway) e desenhar um diagrama de contexto simples (C4 Context)
-  *(ver `docs/contexto-c4.md` — inclui a relação com NATS/inventory e os contextos pós-MVP como caixa separada)*
-- [ ] Listar os eventos de domínio principais que vão trafegar via NATS (ex: `MercadoriaRecebida`, `LoteCriado`, `EstoqueAtualizado`) — só a lista, sem payload ainda
+  *(ver `docs/contexto-c4.md` — inclui a relação com RabbitMQ/inventory e os contextos pós-MVP como caixa separada; era NATS, atualizado em 2026-08-27 — ver ADR-0009)*
+- [ ] Listar os eventos de domínio principais que vão trafegar via RabbitMQ (ex: `MercadoriaRecebida`, `LoteCriado`, `EstoqueAtualizado`) — só a lista, sem payload ainda
   *(lista antiga ficou desatualizada pelas decisões de compra/venda — revisar contra `docs/requisitos.md` antes de fechar, ex: `MercadoriaRecebida` virou `CompraLançada`)*
 
 ### ADRs iniciais
@@ -28,6 +28,8 @@ Convenções:
 - [x] ADR-0002: "Por que database-per-service"
 - [x] ADR-0003: "Por que NATS para mensageria assíncrona"
   📚 Estudar: at-least-once vs exactly-once delivery — por que isso importa pro evento de recebimento de mercadoria
+  *(superada por ADR-0009 em 2026-08-27 — projeto trocou pra RabbitMQ, motivo de aprendizado/currículo)*
+- [x] ADR-0009 (novo): "RabbitMQ para mensageria assíncrona (substitui ADR-0003)"
 - [x] ADR-0004: "Kg como unidade canônica de estoque — conversões acontecem na borda"
 - [x] ADR-0008 (novo, não previsto originalmente): "Operações modelam fato consumado, não estado pendente, por padrão" — princípio descoberto ao decidir os fluxos de compra/venda, ver `docs/adr/0008-fato-consumado-sem-estado-pendente.md`
 
@@ -101,8 +103,10 @@ Convenções:
 - [x] Configurar PostgreSQL no k8s (um banco por serviço) — decidir: operator (ex: CloudNativePG) ou StatefulSet simples
   📚 Estudar: database-per-service na prática — isolamento de credenciais, backup por banco
   *(decisão: StatefulSet simples, sem operator — RNF7 não justifica a complexidade de failover/backup automático. Primeiro banco criado: `auth-db`, em `deploy/auth-db/`, credenciais via Secret criado imperativamente, nunca commitado)*
-- [x] Deployar NATS no cluster (modo standalone, sem clustering por enquanto — não precisa de HA no MVP)
-  *(Deployment + Service em `deploy/nats/`, validado via endpoint de monitoramento em /varz)*
+- [x] ~~Deployar NATS no cluster~~ — SUPERADO, ver item abaixo
+  *(Deployment + Service ficaram em `deploy/nats/`, validado via /varz — mas a decisão de mensageria mudou pra RabbitMQ em 2026-08-27, ver ADR-0009. Manifests antigos ainda não removidos do cluster.)*
+- [ ] Deployar RabbitMQ no cluster (modo standalone, sem clustering — não precisa de HA no MVP) — substitui o item do NATS acima
+  📚 Estudar: RabbitMQ — conceitos de exchange, queue, binding, virtual host
 - [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
 ### CI/CD básico
@@ -229,19 +233,20 @@ Convenções:
 ## 🔄 Fase 6 — Mensageria e sagas
 
 ### Primeira comunicação assíncrona
-*(evento renomeado em 2026-08-24 de `MercadoriaRecebida` pra `CompraLançada`, refletindo o lançamento em passo único — ver RF-PUR-1)*
+*(evento renomeado em 2026-08-24 de `MercadoriaRecebida` pra `CompraLançada`, refletindo o lançamento em passo único — ver RF-PUR-1. Atualizado em 2026-08-27: mensageria trocada de NATS pra RabbitMQ, ver ADR-0009 — motivo de aprendizado/currículo, não técnico.)*
 - [ ] Definir schema do evento `CompraLançada` (payload: lote, produto, quantidade em kg, timestamp)
   📚 Estudar: versionamento de eventos em mensageria — como evoluir o schema de um evento sem quebrar consumidores antigos
-- [ ] Trocar a chamada síncrona gRPC de lançamento de compra (Fase 4) por publish do evento `CompraLançada` via NATS no purchasing-service
+- [ ] Trocar a chamada síncrona gRPC de lançamento de compra (Fase 4) por publish do evento `CompraLançada` via RabbitMQ no purchasing-service
+  📚 Estudar: exchanges e filas no RabbitMQ (direct/topic/fanout) — qual tipo de exchange faz sentido pra esse evento
 - [ ] Implementar subscriber do evento no inventory-service (cria o lote a partir do evento recebido)
 - [ ] Implementar idempotência no consumidor (mesmo evento processado duas vezes não duplica lote)
-  📚 Estudar: idempotência em consumidores de mensageria — chave de deduplicação, at-least-once delivery do NATS
-- [ ] Testar cenário de falha: inventory-service fora do ar durante publish — validar que a mensagem não se perde (JetStream com persistência, se aplicável)
-  📚 Estudar: NATS Core vs JetStream — quando vale a pena usar JetStream (persistência, replay) em vez do Core pub/sub
-- [ ] Documentar o fluxo assíncrono resultante num ADR-0007: "Lançamento de compra via evento assíncrono (NATS)"
+  📚 Estudar: idempotência em consumidores de mensageria — chave de deduplicação, at-least-once delivery do RabbitMQ
+- [ ] Testar cenário de falha: inventory-service fora do ar durante publish — validar que a mensagem não se perde (fila durável + publisher confirms)
+  📚 Estudar: filas duráveis e publisher confirms do RabbitMQ — equivalente ao que JetStream resolveria no NATS
+- [ ] Documentar o fluxo assíncrono resultante num ADR-0007: "Lançamento de compra via evento assíncrono (RabbitMQ)"
 
 ### Observabilidade da mensageria
-- [ ] Propagar trace context através do evento NATS (correlacionar span do publish com o do consumo)
+- [ ] Propagar trace context através do evento RabbitMQ (correlacionar span do publish com o do consumo)
 - [ ] Adicionar métrica de mensagens processadas/falhas no inventory-service
 
 ---
@@ -304,7 +309,7 @@ Serviços que ficam pra depois da apresentação, sem detalhamento de tarefas ai
 
 - [gRPC-Go](https://grpc.io/docs/languages/go/) — documentação oficial gRPC para Go
 - [GORM](https://gorm.io/docs/) — ORM em Go, mapeamento de structs e queries
-- [NATS Docs](https://docs.nats.io/) — mensageria (Core e JetStream)
+- [RabbitMQ Docs](https://www.rabbitmq.com/docs) — mensageria (exchanges, filas, publisher confirms)
 - [OpenTelemetry Go](https://opentelemetry.io/docs/languages/go/) — instrumentação e tracing distribuído
 - [Focus NFe — Documentação da API](https://focusnfe.com.br/doc/) — emissão de NFe via API terceira
 - [Nuxt 3](https://nuxt.com/docs) — framework Vue

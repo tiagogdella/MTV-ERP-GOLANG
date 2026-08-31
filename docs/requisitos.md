@@ -171,7 +171,7 @@ Ainda em aberto: `Fornecedor` e `Cliente` ficam em `catalog` (junto com Produto,
 ## RNF — Requisitos não funcionais
 
 - RNF1: RPCs internos devem responder em até ~500ms sob carga normal (p95) — número frouxo de propósito, dado o volume baixo de uso (ver RNF7); ajuste se algum fluxo específico precisar de garantia mais rígida
-- RNF2: Comunicação assíncrona entre serviços via NATS deve tolerar entrega at-least-once; consumidores devem ser idempotentes
+- RNF2: Comunicação assíncrona entre serviços via RabbitMQ deve tolerar entrega at-least-once; consumidores devem ser idempotentes
 - RNF3: Cada serviço possui seu próprio banco de dados (database-per-service); não há FK física entre bancos de serviços diferentes
 - RNF4: Toda chamada que passa pelo gateway exige token JWT válido
 - RNF5: Estoque interno sempre em kg — conversão de unidade só ocorre na borda (entrada/saída)
