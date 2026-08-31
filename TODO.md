@@ -105,8 +105,9 @@ Convenções:
   *(decisão: StatefulSet simples, sem operator — RNF7 não justifica a complexidade de failover/backup automático. Primeiro banco criado: `auth-db`, em `deploy/auth-db/`, credenciais via Secret criado imperativamente, nunca commitado)*
 - [x] ~~Deployar NATS no cluster~~ — SUPERADO, ver item abaixo
   *(Deployment + Service ficaram em `deploy/nats/`, validado via /varz — mas a decisão de mensageria mudou pra RabbitMQ em 2026-08-27, ver ADR-0009. Manifests antigos ainda não removidos do cluster.)*
-- [ ] Deployar RabbitMQ no cluster (modo standalone, sem clustering — não precisa de HA no MVP) — substitui o item do NATS acima
+- [x] Deployar RabbitMQ no cluster (modo standalone, sem clustering — não precisa de HA no MVP) — substitui o item do NATS acima
   📚 Estudar: RabbitMQ — conceitos de exchange, queue, binding, virtual host
+  *(Deployment + Service em `deploy/rabbitmq/`, imagem `rabbitmq:3.13-management` com UI web na porta 15672; NATS removido do cluster e da pasta `deploy/`)*
 - [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
 
 ### CI/CD básico
