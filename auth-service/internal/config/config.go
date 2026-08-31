@@ -8,12 +8,14 @@ import (
 type Config struct {
 	Port 			string
 	Environment		string
+	DatabaseURL     string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
 		Port:			getEnv("PORT", "8080"),
 		Environment:	getEnv("ENVIRONMENT", "local"),
+		DatabaseURL:    getEnv("DATABASE_URL", ""),
 	}
 
 	if err:= cfg.validate(); err != nil {
@@ -26,6 +28,10 @@ func Load() (Config, error) {
 func (c Config) validate() error {
 	if c.Port == "" {
 		return fmt.Errorf("PORT não pode ser vazio")
+	}
+
+	if c.DatabaseURL == "" {
+		return fmt.Errorf("DATABASE_URL não pode ser vazio")
 	}
 
 	return nil

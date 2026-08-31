@@ -121,7 +121,8 @@ Convenções:
 ### Ferramentas de desenvolvimento
 *(decisão revista em 2026-08-27: GORM no lugar de sqlc como camada de acesso a dados — recomendação do professor, banco continua Postgres; `golang-migrate` mantido para migrations versionadas em vez do `AutoMigrate` do GORM, pra não depender de inferência de schema em produção)*
 - [ ] Instalar e configurar `golang-migrate` no template (comando padrão pra criar/rodar migrations)
-- [ ] Instalar e configurar `GORM` no template (conexão com Postgres via driver `gorm.io/driver/postgres`, structs de modelo por serviço)
+- [x] Instalar e configurar `GORM` no template (conexão com Postgres via driver `gorm.io/driver/postgres`, structs de modelo por serviço)
+  *(feito direto no `auth-service`, não no template vazio — mesmo raciocínio já usado pro `buf`. `internal/db/models.go` (struct User) + `internal/db/db.go` (Connect), `DATABASE_URL` no Config. Conexão testada de verdade contra o `auth-db` no cluster)*
   📚 Estudar: GORM — Active Record vs Data Mapper, `AutoMigrate` vs migrations versionadas, N+1 em preload de associações
 - [ ] Instalar `buf` e configurar `buf.gen.yaml` pra geração de código Go a partir de `.proto`
   📚 Estudar: Buf — lint de proto, breaking change detection, geração de código
