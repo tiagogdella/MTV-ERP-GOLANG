@@ -146,7 +146,8 @@ Convenções:
 - [ ] Implementar acesso a dados com GORM (create user, find by email, etc.)
 - [x] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
   *(`internal/auth/password.go` — HashPassword/CheckPassword. Testado de ponta a ponta: hash real gravado no `auth-db`, confirmado via psql)*
-- [ ] Implementar geração e validação de JWT
+- [x] Implementar geração e validação de JWT
+  *(`internal/auth/jwt.go` — GenerateToken/ValidateToken, HS256. Assinatura simétrica é suficiente porque só o auth-service assina e valida — os outros serviços nunca verificam token sozinhos, sempre via RPC ValidateToken, RF-AUTH-3. Testado gerando e validando de volta, claims batendo)*
   📚 Estudar: JWT — claims padrão (exp, iat, sub), assinatura HS256 vs RS256, onde guardar a chave secreta
 - [ ] Implementar RPC `Login` (valida credenciais, retorna token)
 - [ ] Implementar RPC `ValidateToken` (usado pelos outros serviços via gRPC)

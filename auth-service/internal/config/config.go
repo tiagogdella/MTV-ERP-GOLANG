@@ -9,6 +9,7 @@ type Config struct {
 	Port 			string
 	Environment		string
 	DatabaseURL     string
+	JWTSecret       string
 }
 
 func Load() (Config, error) {
@@ -16,6 +17,7 @@ func Load() (Config, error) {
 		Port:			getEnv("PORT", "8080"),
 		Environment:	getEnv("ENVIRONMENT", "local"),
 		DatabaseURL:    getEnv("DATABASE_URL", ""),
+		JWTSecret:      getEnv("JWT_SECRET", ""),
 	}
 
 	if err:= cfg.validate(); err != nil {
@@ -32,6 +34,10 @@ func (c Config) validate() error {
 
 	if c.DatabaseURL == "" {
 		return fmt.Errorf("DATABASE_URL não pode ser vazio")
+	}
+
+	if c.JWTSecret == "" {
+		return fmt.Errorf("JWT_SECRET não pode ser vazio")
 	}
 
 	return nil
