@@ -149,9 +149,10 @@ Convenções:
 - [x] Implementar geração e validação de JWT
   *(`internal/auth/jwt.go` — GenerateToken/ValidateToken, HS256. Assinatura simétrica é suficiente porque só o auth-service assina e valida — os outros serviços nunca verificam token sozinhos, sempre via RPC ValidateToken, RF-AUTH-3. Testado gerando e validando de volta, claims batendo)*
   📚 Estudar: JWT — claims padrão (exp, iat, sub), assinatura HS256 vs RS256, onde guardar a chave secreta
-- [ ] Implementar RPC `Login` (valida credenciais, retorna token)
-- [ ] Implementar RPC `ValidateToken` (usado pelos outros serviços via gRPC)
-- [ ] Implementar RPC `CreateUser` (admin cria novos usuários)
+- [x] Implementar RPC `Login` (valida credenciais, retorna token)
+- [x] Implementar RPC `ValidateToken` (usado pelos outros serviços via gRPC)
+- [x] Implementar RPC `CreateUser` (admin cria novos usuários)
+  *(`internal/grpcserver/server.go` — os três implementados e testados de ponta a ponta via grpcurl contra o servidor rodando de verdade: CreateUser → Login → ValidateToken, token e claims batendo. Servidor gRPC roda numa goroutine junto do HTTP de healthcheck/metrics, cfg.GRPCPort)*
 
 ### Qualidade e observabilidade
 - [ ] Escrever testes unitários das regras de negócio (hash, validação de token)

@@ -4,11 +4,15 @@ import (
 	"log/slog"
 	"os"
 	"net/http"
+	"net"
 
 	"mtv-erp/auth-service/internal/config"
 	"mtv-erp/auth-service/internal/health"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"mtv-erp/auth-service/internal/db"
+	"google.golang.org/grpc"
+	"mtv-erp/auth-service/internal/grpcserver"
+	"mtv-erp/auth-service/internal/authpb"
 )
 
 func main() {
@@ -26,9 +30,26 @@ func main() {
 		slog.Error("falha ao conectar no banco", "error", err)
 		os.Exit(1)
 	}
-	_ = database	
 
 	slog.Info("conectado ao banco de dados")
+
+	repo := db.NewUserRepository(database)
+	grpcServer := grpc.NewServer()
+	authpb.RegisterAuthServiceServer(grpcServer, grpcserver.NewServer(repo, cfg.JWTSecret))
+
+	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
+	if err != nil {
+		slog.Error("failed opening GRPC PORT", "error", err)
+		os.Exit(1)
+	}
+
+	go func() {
+		slog.Info("server GRPC initialized", "port", cfg.GRPCPort)
+		if err := grpcServer.Serve(lis); err != nil {
+			slog.Error("server GRPC stopped", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", health.LivenessHandler)

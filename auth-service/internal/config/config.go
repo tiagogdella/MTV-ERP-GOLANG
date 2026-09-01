@@ -10,6 +10,7 @@ type Config struct {
 	Environment		string
 	DatabaseURL     string
 	JWTSecret       string
+	GRPCPort        string
 }
 
 func Load() (Config, error) {
@@ -18,6 +19,7 @@ func Load() (Config, error) {
 		Environment:	getEnv("ENVIRONMENT", "local"),
 		DatabaseURL:    getEnv("DATABASE_URL", ""),
 		JWTSecret:      getEnv("JWT_SECRET", ""),
+		GRPCPort:       getEnv("GRPC_PORT", "9090"),
 	}
 
 	if err:= cfg.validate(); err != nil {
