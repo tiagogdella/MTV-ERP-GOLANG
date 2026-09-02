@@ -155,7 +155,8 @@ Convenções:
   *(`internal/grpcserver/server.go` — os três implementados e testados de ponta a ponta via grpcurl contra o servidor rodando de verdade: CreateUser → Login → ValidateToken, token e claims batendo. Servidor gRPC roda numa goroutine junto do HTTP de healthcheck/metrics, cfg.GRPCPort)*
 
 ### Qualidade e observabilidade
-- [ ] Escrever testes unitários das regras de negócio (hash, validação de token)
+- [x] Escrever testes unitários das regras de negócio (hash, validação de token)
+  *(`internal/auth/password_test.go` e `jwt_test.go` — cobre hash/verificação de senha e geração/validação de token, incluindo o caso de segredo errado)*
 - [ ] Escrever teste de integração do fluxo de login (contra banco real via testcontainers ou docker-compose)
   📚 Estudar: testcontainers-go — como subir Postgres descartável pra teste de integração
 - [ ] Validar que métricas Prometheus aparecem no Grafana pro auth-service
