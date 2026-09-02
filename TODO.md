@@ -157,10 +157,12 @@ Convenções:
 ### Qualidade e observabilidade
 - [x] Escrever testes unitários das regras de negócio (hash, validação de token)
   *(`internal/auth/password_test.go` e `jwt_test.go` — cobre hash/verificação de senha e geração/validação de token, incluindo o caso de segredo errado)*
-- [ ] Escrever teste de integração do fluxo de login (contra banco real via testcontainers ou docker-compose)
+- [x] Escrever teste de integração do fluxo de login (contra banco real via testcontainers ou docker-compose)
+  *(`internal/grpcserver/login_test.go` — sobe Postgres real via testcontainers, roda a migration de verdade, cria usuário e chama `server.Login` direto. Debugou um problema clássico de timing: Postgres reinicia sozinho na primeira subida, precisa esperar a 2ª ocorrência do log "ready to accept connections")*
   📚 Estudar: testcontainers-go — como subir Postgres descartável pra teste de integração
 - [ ] Validar que métricas Prometheus aparecem no Grafana pro auth-service
 - [ ] Validar que traces do auth-service aparecem no backend de tracing configurado
+  *(bloqueado: OpenTelemetry nunca foi configurado no template — ver Fase 2, "Adicionar setup base do OpenTelemetry", ainda `[ ]`. Precisa resolver aquele item primeiro, não faz sentido validar trace que não existe)*
 - [ ] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
 
 ### Deploy
