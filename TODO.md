@@ -108,7 +108,8 @@ Convenções:
 - [x] Deployar RabbitMQ no cluster (modo standalone, sem clustering — não precisa de HA no MVP) — substitui o item do NATS acima
   📚 Estudar: RabbitMQ — conceitos de exchange, queue, binding, virtual host
   *(Deployment + Service em `deploy/rabbitmq/`, imagem `rabbitmq:3.13-management` com UI web na porta 15672; NATS removido do cluster e da pasta `deploy/`)*
-- [ ] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
+- [x] Validar que Prometheus/Grafana já rodando no servidor conseguem fazer scrape de um pod de teste
+  *(feito em 2026-09-08 com o próprio auth-service. Prometheus roda como container Docker fora do k3s (rede `monitoring_default`, sem k8s SD), então: Service `NodePort` dedicado `auth-service-metrics` (`deploy/auth-service/service-metrics.yaml`, nodePort 30080) expõe o `/metrics` do pod; job estático `auth-service` no `prometheus.yml` do servidor apontando pra `172.18.0.1:30080` (gateway da bridge = host). Target UP, reload via `docker kill --signal=HUP prometheus`)*
 
 ### CI/CD básico
 - [x] Escolher e configurar pipeline de CI (GitHub Actions ou similar) rodando lint + testes a cada push
@@ -160,7 +161,8 @@ Convenções:
 - [x] Escrever teste de integração do fluxo de login (contra banco real via testcontainers ou docker-compose)
   *(`internal/grpcserver/login_test.go` — sobe Postgres real via testcontainers, roda a migration de verdade, cria usuário e chama `server.Login` direto. Debugou um problema clássico de timing: Postgres reinicia sozinho na primeira subida, precisa esperar a 2ª ocorrência do log "ready to accept connections")*
   📚 Estudar: testcontainers-go — como subir Postgres descartável pra teste de integração
-- [ ] Validar que métricas Prometheus aparecem no Grafana pro auth-service
+- [x] Validar que métricas Prometheus aparecem no Grafana pro auth-service
+  *(feito em 2026-09-08 — datasource Prometheus já provisionado no Grafana (`http://prometheus:9090`); no Explore a query `promhttp_metric_handler_requests_total{job="auth-service"}` plota série do pod deployado. Depende do job de scrape configurado no item da Fase 2)*
 - [ ] Validar que traces do auth-service aparecem no backend de tracing configurado
   *(bloqueado: OpenTelemetry nunca foi configurado no template — ver Fase 2, "Adicionar setup base do OpenTelemetry", ainda `[ ]`. Precisa resolver aquele item primeiro, não faz sentido validar trace que não existe)*
 - [ ] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
