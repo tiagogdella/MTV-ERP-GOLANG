@@ -166,9 +166,12 @@ Convenções:
 - [ ] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
 
 ### Deploy
-- [ ] Escrever manifests k8s específicos do auth-service (a partir dos genéricos da Fase 2)
-- [ ] Deployar auth-service no cluster e validar healthcheck respondendo
-- [ ] Testar login end-to-end via `grpcurl` contra o serviço deployado
+- [x] Escrever manifests k8s específicos do auth-service (a partir dos genéricos da Fase 2)
+  *(feito em 2026-09-08 — `deploy/auth-service/` com configmap (ENVIRONMENT/PORT/GRPC_PORT), service (portas http 8080 + grpc 9090), deployment (envFrom config+secret, probes /healthz e /readyz, `imagePullPolicy: IfNotPresent`) e secret.yaml como molde comentado. Commit `e35ad2d`)*
+- [x] Deployar auth-service no cluster e validar healthcheck respondendo
+  *(feito em 2026-09-08 — primeiro deploy do auth-service no k3s. Secret `auth-service-secret` criado fora do git (`JWT_SECRET` + `DATABASE_URL` apontando pro Service `auth-db`). Pipeline manual do `docs/deploy.md`: build → save → scp → `k3s ctr images import` → `kubectl apply`. Pod 1/1 Running, `/healthz` e `/readyz` = 200)*
+- [x] Testar login end-to-end via `grpcurl` contra o serviço deployado
+  *(feito em 2026-09-08 — servidor sem reflection, então `grpcurl -import-path auth-service/proto -proto auth.proto`. Fluxo CreateUser → Login → ValidateToken contra o pod: token gerado e validado, `valid: true` com `userId`/`role` batendo. Usuário de teste `e2e@mtv.com.br` ficou no `auth-db` do cluster)*
 
 ---
 
