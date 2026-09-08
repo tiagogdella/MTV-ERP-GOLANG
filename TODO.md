@@ -165,7 +165,8 @@ Convenções:
   *(feito em 2026-09-08 — datasource Prometheus já provisionado no Grafana (`http://prometheus:9090`); no Explore a query `promhttp_metric_handler_requests_total{job="auth-service"}` plota série do pod deployado. Depende do job de scrape configurado no item da Fase 2)*
 - [ ] Validar que traces do auth-service aparecem no backend de tracing configurado
   *(bloqueado: OpenTelemetry nunca foi configurado no template — ver Fase 2, "Adicionar setup base do OpenTelemetry", ainda `[ ]`. Precisa resolver aquele item primeiro, não faz sentido validar trace que não existe)*
-- [ ] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
+- [x] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
+  *(feito em 2026-09-08 — `auth-service/README.md`, em inglês: o que faz, os 3 RPCs, portas, tabela de env vars, passo a passo pra rodar local (Postgres + migrate + make run), make targets, testes, `buf generate`, ponteiro pro deploy)*
 
 ### Deploy
 - [x] Escrever manifests k8s específicos do auth-service (a partir dos genéricos da Fase 2)
