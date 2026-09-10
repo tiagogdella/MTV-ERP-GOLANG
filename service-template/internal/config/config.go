@@ -6,17 +6,21 @@ import (
 )
 
 type Config struct {
-	Port 			string
-	Environment		string
+	Port        string
+	Environment string
+	DatabaseURL string
+	GRPCPort    string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Port:			getEnv("PORT", "8080"),
-		Environment:	getEnv("ENVIRONMENT", "local"),
+		Port:        getEnv("PORT", "8080"),
+		Environment: getEnv("ENVIRONMENT", "local"),
+		DatabaseURL: getEnv("DATABASE_URL", ""),
+		GRPCPort:    getEnv("GRPC_PORT", "9090"),
 	}
 
-	if err:= cfg.validate(); err != nil {
+	if err := cfg.validate(); err != nil {
 		return Config{}, err
 	}
 
@@ -26,6 +30,10 @@ func Load() (Config, error) {
 func (c Config) validate() error {
 	if c.Port == "" {
 		return fmt.Errorf("PORT não pode ser vazio")
+	}
+
+	if c.DatabaseURL == "" {
+		return fmt.Errorf("DATABASE_URL não pode ser vazio")
 	}
 
 	return nil
