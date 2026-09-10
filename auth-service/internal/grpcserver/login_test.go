@@ -13,8 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"mtv-erp/auth-service/internal/auth"
-	"mtv-erp/auth-service/internal/authpb"
-
+	authpb "mtv-erp/auth-service/internal/authpb/auth/v1"
 )
 
 func TestLoginIntegration(t *testing.T) {

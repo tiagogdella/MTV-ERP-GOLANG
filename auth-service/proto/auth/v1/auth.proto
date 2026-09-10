@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package auth;
+package auth.v1;
 
-option go_package = "mtv-erp/auth-service/internal/authpb";
+option go_package = "mtv-erp/auth-service/internal/authpb/auth/v1;authv1";
 
 message LoginRequest {
     string email = 1;

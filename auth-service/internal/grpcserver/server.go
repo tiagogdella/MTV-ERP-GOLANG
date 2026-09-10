@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"mtv-erp/auth-service/internal/auth"
-	"mtv-erp/auth-service/internal/authpb"
+	authpb "mtv-erp/auth-service/internal/authpb/auth/v1"
 	"mtv-erp/auth-service/internal/db"
 )
 

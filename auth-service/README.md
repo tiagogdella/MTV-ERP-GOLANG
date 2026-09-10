@@ -64,9 +64,9 @@ Smoke test:
 
 ```bash
 curl -s localhost:8080/healthz            # -> ok
-grpcurl -plaintext -import-path proto -proto auth.proto \
+grpcurl -plaintext -import-path proto -proto auth/v1/auth.proto \
   -d '{"email":"a@b.com","password":"123456","role":"operador"}' \
-  localhost:9090 auth.AuthService/CreateUser
+  localhost:9090 auth.v1.AuthService/CreateUser
 ```
 
 ## Make targets
@@ -87,7 +87,7 @@ grpcurl -plaintext -import-path proto -proto auth.proto \
 
 ## Protobuf
 
-The `.proto` lives in `proto/`. Regenerate the Go code (`internal/authpb`) with:
+The `.proto` lives in `proto/auth/v1/`. Regenerate the Go code (`internal/authpb/auth/v1`) with:
 
 ```bash
 cd proto && buf generate

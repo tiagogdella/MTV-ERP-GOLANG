@@ -12,7 +12,7 @@ import (
 	"mtv-erp/auth-service/internal/db"
 	"google.golang.org/grpc"
 	"mtv-erp/auth-service/internal/grpcserver"
-	"mtv-erp/auth-service/internal/authpb"
+	authpb "mtv-erp/auth-service/internal/authpb/auth/v1"
 )
 
 func main() {
