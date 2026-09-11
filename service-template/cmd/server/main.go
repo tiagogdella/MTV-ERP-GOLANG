@@ -14,11 +14,22 @@ import (
 	grpchealth "google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"net"
+	"context"
+	"mtv-erp/service-template/internal/observability"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	ctx := context.Background()
+
+	shutdownTracer, err := observability.InitTracer(ctx, "service-template")
+	if err != nil {
+		slog.Error("falha ao iniciar tracing", "error", err)
+		os.Exit(1)
+	}
+	defer shutdownTracer(ctx)
 
 	cfg, err := config.Load()
 	if err != nil {
