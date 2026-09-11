@@ -16,6 +16,8 @@ import (
 	"net"
 	"context"
 	"mtv-erp/service-template/internal/observability"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"mtv-erp/service-template/internal/interceptors"
 )
 
 func main() {
@@ -45,7 +47,15 @@ func main() {
 
 	slog.Info("Conectado ao banco de dados")
 	_ = database // rep e ser gRPC do servicço entram aqui
-	grpcServer := grpc.NewServer()
+	
+	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.ChainUnaryInterceptor(
+			interceptors.Recovery(),
+			interceptors.Logging(),
+		),
+	)
+
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()
 	grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
