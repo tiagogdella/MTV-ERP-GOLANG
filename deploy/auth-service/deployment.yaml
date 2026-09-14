@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: auth-service:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/tiagogdella/auth-service:latest
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 8080
@@ -39,3 +39,6 @@ spec:
               port: 8080
             initialDelaySeconds: 3
             periodSeconds: 10
+      imagePullSecrets:
+        - name: ghcr-secret
+
