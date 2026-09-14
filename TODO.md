@@ -84,11 +84,13 @@ Convenções:
 - [x] Adicionar healthcheck básico (endpoint/RPC de liveness e readiness)
 - [x] Adicionar Dockerfile multi-stage padrão (build Go estático + imagem final mínima, ex: distroless ou alpine)
   *(imagem final ~18.5MB, distroless — vs quase 1GB da imagem golang usada só pra compilar)*
-- [ ] Adicionar setup base do OpenTelemetry (tracer provider + exporter) no template
+- [x] Adicionar setup base do OpenTelemetry (tracer provider + exporter) no template
   📚 Estudar: OpenTelemetry Go SDK — diferença entre TracerProvider, Exporter e Span; como instrumentar gRPC automaticamente com interceptors
+  *(feito em 2026-09-14 — `internal/observability/tracing.go`: Resource + Exporter OTLP gRPC (`otlptracegrpc`, lê `OTEL_EXPORTER_OTLP_ENDPOINT`, precisa do esquema `http://` senão falha silencioso) + TracerProvider registrado global + propagator `TraceContext`. Retrofit no auth-service também, não só no template)*
 - [x] Adicionar setup base do Prometheus (endpoint `/metrics` com client_golang) no template
-- [ ] Adicionar interceptors gRPC padrão (logging, recovery de panic, tracing) no template
+- [x] Adicionar interceptors gRPC padrão (logging, recovery de panic, tracing) no template
   📚 Estudar: gRPC interceptors (unary e stream) — como compor múltiplos interceptors numa chain
+  *(feito em 2026-09-14 — `internal/interceptors/recovery.go` (recupera panic, vira `codes.Internal`) e `logging.go` (método/duração/código por chamada), encadeados via `grpc.ChainUnaryInterceptor`. Tracing por request via `otelgrpc.NewServerHandler()` como `grpc.StatsHandler`, não como interceptor manual — é o padrão atual da lib)*
 
 ### Setup de infraestrutura do projeto
 
@@ -163,8 +165,8 @@ Convenções:
   📚 Estudar: testcontainers-go — como subir Postgres descartável pra teste de integração
 - [x] Validar que métricas Prometheus aparecem no Grafana pro auth-service
   *(feito em 2026-09-08 — datasource Prometheus já provisionado no Grafana (`http://prometheus:9090`); no Explore a query `promhttp_metric_handler_requests_total{job="auth-service"}` plota série do pod deployado. Depende do job de scrape configurado no item da Fase 2)*
-- [ ] Validar que traces do auth-service aparecem no backend de tracing configurado
-  *(bloqueado: OpenTelemetry nunca foi configurado no template — ver Fase 2, "Adicionar setup base do OpenTelemetry", ainda `[ ]`. Precisa resolver aquele item primeiro, não faz sentido validar trace que não existe)*
+- [x] Validar que traces do auth-service aparecem no backend de tracing configurado
+  *(feito em 2026-09-14 — backend é Jaeger all-in-one, container Docker novo no servidor (`monitoring/docker-compose.yml`, junto do Prometheus/Grafana), UI em `192.168.1.44:16686`, OTLP gRPC na 4317. `OTEL_EXPORTER_OTLP_ENDPOINT` adicionado no ConfigMap do auth-service. Chamadas reais (`CreateUser`, `Login`) feitas contra o pod deployado via `grpcurl` — traces apareceram no Jaeger na hora, um span por RPC)*
 - [x] Escrever README do serviço (o que faz, como rodar local, variáveis de ambiente)
   *(feito em 2026-09-08 — `auth-service/README.md`, em inglês: o que faz, os 3 RPCs, portas, tabela de env vars, passo a passo pra rodar local (Postgres + migrate + make run), make targets, testes, `buf generate`, ponteiro pro deploy)*
 
