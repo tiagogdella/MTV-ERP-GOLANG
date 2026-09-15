@@ -77,8 +77,8 @@ Convenções:
 ### Template reutilizável de microsserviço
 - [x] Criar repositório/diretório `service-template` com estrutura de pastas padrão Go (cmd/, internal/, pkg/, migrations/, proto/)
   📚 Estudar: Standard Go Project Layout — o que faz sentido adotar e o que é exagero pro nosso caso
-- [ ] Configurar `go.mod`, Makefile básico (build, test, run, lint) no template
-  *(go.mod feito; falta o Makefile)*
+- [x] Configurar `go.mod`, Makefile básico (build, test, run, lint) no template
+  *(Makefile com os 4 alvos desde o início; `go.mod` ganhou grpc/gorm/otel como deps diretas em 2026-09-14, durante o resync do template)*
 - [x] Adicionar setup de log/slog estruturado (JSON handler) como padrão do template
 - [x] Adicionar setup de config via env vars (sem lib externa pesada — usar stdlib `os.Getenv` + struct de config validada na inicialização)
 - [x] Adicionar healthcheck básico (endpoint/RPC de liveness e readiness)
@@ -123,12 +123,14 @@ Convenções:
 
 ### Ferramentas de desenvolvimento
 *(decisão revista em 2026-08-27: GORM no lugar de sqlc como camada de acesso a dados — recomendação do professor, banco continua Postgres; `golang-migrate` mantido para migrations versionadas em vez do `AutoMigrate` do GORM, pra não depender de inferência de schema em produção)*
-- [ ] Instalar e configurar `golang-migrate` no template (comando padrão pra criar/rodar migrations)
+- [x] Instalar e configurar `golang-migrate` no template (comando padrão pra criar/rodar migrations)
+  *(feito em 2026-09-10 — `migrate` CLI instalado (`go install .../migrate/v4/cmd/migrate`), `service-template/migrations/README.md` documenta a convenção de nomes e os comandos `create`/`up`/`version`)*
 - [x] Instalar e configurar `GORM` no template (conexão com Postgres via driver `gorm.io/driver/postgres`, structs de modelo por serviço)
   *(feito direto no `auth-service`, não no template vazio — mesmo raciocínio já usado pro `buf`. `internal/db/models.go` (struct User) + `internal/db/db.go` (Connect), `DATABASE_URL` no Config. Conexão testada de verdade contra o `auth-db` no cluster)*
   📚 Estudar: GORM — Active Record vs Data Mapper, `AutoMigrate` vs migrations versionadas, N+1 em preload de associações
-- [ ] Instalar `buf` e configurar `buf.gen.yaml` pra geração de código Go a partir de `.proto`
+- [x] Instalar `buf` e configurar `buf.gen.yaml` pra geração de código Go a partir de `.proto`
   📚 Estudar: Buf — lint de proto, breaking change detection, geração de código
+  *(feito em 2026-09-10 — `service-template/proto/` com `buf.yaml` (lint `STANDARD`) + `buf.gen.yaml`, gera `example.v1` pra `internal/pb/`. Mesmo padrão aplicado no `auth-service`, migrado de `DEFAULT` pra `STANDARD` e de `auth` pra `auth.v1` no mesmo lote de trabalho)*
 
 ---
 
@@ -146,7 +148,8 @@ Convenções:
 - [x] Clonar o service-template pra `auth-service`
 - [x] Criar migration inicial (tabela `users`, `roles`)
   *(só `users` — sem tabela `roles` separada, `role` é coluna texto, já decidido em `docs/modelo-dados.md`. Aplicada de verdade contra o `auth-db` no cluster via `golang-migrate`)*
-- [ ] Implementar acesso a dados com GORM (create user, find by email, etc.)
+- [x] Implementar acesso a dados com GORM (create user, find by email, etc.)
+  *(`internal/db/users.go` — `UserRepository.Create`/`FindByEmail`. Item ficou órfão sem marcar de uma sessão anterior — já estava implementado e coberto pelo teste de integração)*
 - [x] Implementar hash de senha (bcrypt via stdlib-adjacent lib, ex: `golang.org/x/crypto/bcrypt`)
   *(`internal/auth/password.go` — HashPassword/CheckPassword. Testado de ponta a ponta: hash real gravado no `auth-db`, confirmado via psql)*
 - [x] Implementar geração e validação de JWT
