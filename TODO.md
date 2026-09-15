@@ -186,12 +186,17 @@ Convenções:
 ## 📦 Fase 4 — Serviços seguintes (clonando o template)
 
 ### catalog-service
-- [ ] Clonar template pra `catalog-service`
-- [ ] Modelar entidade `Product` (tipo/marca de arroz — ex: tipo 1, tipo 2, parboilizado, integral)
-- [ ] Modelar entidade `UnitOfMeasure` com os valores definidos na Fase 1 (fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel) e campo `peso_base_kg`
-- [ ] Implementar mecanismo de conversão: função/método que recebe quantidade + unidade e retorna quantidade em kg (e o inverso, kg → unidade de venda)
+- [x] Clonar template pra `catalog-service`
+  *(feito em 2026-09-15 — `cp -r service-template catalog-service` + módulo renomeado (`mtv-erp/catalog-service`) em todos os `.go` via `sed`, proto de exemplo removido, `go build`/`vet` limpos)*
+- [x] Modelar entidade `Product` (tipo/marca de arroz — ex: tipo 1, tipo 2, parboilizado, integral)
+  *(`internal/db/models.go`/`products.go` — `id`, `name`, `active` (soft delete, RF-CAT-2). `ProductRepository.Create`/`ListActive`/`Deactivate`, sem `Delete` de verdade)*
+- [x] Modelar entidade `UnitOfMeasure` com os valores definidos na Fase 1 (fardo 30kg, fardo 10kg, pacote 5kg, pacote 1kg, saco 25kg, saco 50kg, saco 60kg, granel) e campo `peso_base_kg`
+  *(`ConversionFactorKg` como `decimal.Decimal` (shopspring/decimal, não float64 — evita erro de arredondamento), coluna `NUMERIC(12,4)`. Sem método de update no repositório — trava depois de criado é garantido pela ausência do caminho de código, não por constraint de banco, conforme RF-CAT-6/RN2)*
+- [x] Implementar mecanismo de conversão: função/método que recebe quantidade + unidade e retorna quantidade em kg (e o inverso, kg → unidade de venda)
+  *(`internal/db/conversion.go` — `UnitOfMeasure.ToKg`/`FromKg`, usando `.Mul`/`.Div` do decimal. 3 testes unitários: caso normal, fração, e ida-e-volta `FromKg(ToKg(x)) == x` com valor fracionário — prova que a precisão do decimal se mantém)*
 - [ ] Escrever proto `catalog.proto` (RPCs: CRUD de Product, CRUD/list de UnitOfMeasure, RPC de conversão)
-- [ ] Migrations + modelos GORM (products, units_of_measure)
+- [x] Migrations + modelos GORM (products, units_of_measure)
+  *(`migrations/000001_create_products_table.*` e `000002_create_units_of_measure_table.*`, aplicadas e revertidas contra Postgres real — `up`/`down` testados)*
 - [ ] Implementar RPCs e testes unitários (especial atenção nos testes de conversão de unidade — casos de borda tipo fração de kg)
 - [ ] Seed de dados inicial (as unidades padrão já listadas, alguns produtos de exemplo)
 - [ ] Deploy no k8s + validação de métricas/traces (deve ser mais rápido que o auth-service, já que o template está validado)
