@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+option go_package = "mtv-erp/catalog-service/internal/pb/catalog/v1;catalogv1";
+
+message Product {
+  string id = 1;
+  string name = 2;
+  bool active = 3;
+}
+
+message CreateProductRequest {
+  string name = 1;
+}
+
+message ListProductsRequest {}
+
+message ListProductsResponse {
+  repeated Product products = 1;
+}
+
+message DeactivateProductRequest {
+  string id = 1;
+}
+
+message DeactivateProductResponse {}
+
+message CreateProductResponse {
+  Product product = 1;
+}
+
+message UnitOfMeasure {
+  string id = 1;
+  string name = 2;
+  string conversion_factor_kg = 3;
+}
+
+message CreateUnitOfMeasureRequest {
+  string name = 1;
+  string conversion_factor_kg = 2;
+}
+
+message ListUnitsOfMeasureRequest {}
+
+message ListUnitsOfMeasureResponse {
+  repeated UnitOfMeasure units = 1;
+}
+
+message CreateUnitOfMeasureResponse {
+  UnitOfMeasure unit_of_measure = 1;
+}
+
+message ConvertToKgRequest {
+  string unit_id = 1;
+  string quantity = 2;
+}
+
+message ConvertToKgResponse {
+  string kg = 1;
+}
+
+message ConvertFromKgRequest {
+  string unit_id = 1;
+  string kg = 2;
+}
+
+message ConvertFromKgResponse {
+  string quantity = 1;
+}
+
+service CatalogService {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc DeactivateProduct(DeactivateProductRequest) returns (DeactivateProductResponse);
+
+  rpc CreateUnitOfMeasure(CreateUnitOfMeasureRequest) returns (CreateUnitOfMeasureResponse);
+  rpc ListUnitsOfMeasure(ListUnitsOfMeasureRequest) returns (ListUnitsOfMeasureResponse);
+
+  rpc ConvertToKg(ConvertToKgRequest) returns (ConvertToKgResponse);
+  rpc ConvertFromKg(ConvertFromKgRequest) returns (ConvertFromKgResponse);
+}

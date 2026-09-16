@@ -194,7 +194,8 @@ Convenções:
   *(`ConversionFactorKg` como `decimal.Decimal` (shopspring/decimal, não float64 — evita erro de arredondamento), coluna `NUMERIC(12,4)`. Sem método de update no repositório — trava depois de criado é garantido pela ausência do caminho de código, não por constraint de banco, conforme RF-CAT-6/RN2)*
 - [x] Implementar mecanismo de conversão: função/método que recebe quantidade + unidade e retorna quantidade em kg (e o inverso, kg → unidade de venda)
   *(`internal/db/conversion.go` — `UnitOfMeasure.ToKg`/`FromKg`, usando `.Mul`/`.Div` do decimal. 3 testes unitários: caso normal, fração, e ida-e-volta `FromKg(ToKg(x)) == x` com valor fracionário — prova que a precisão do decimal se mantém)*
-- [ ] Escrever proto `catalog.proto` (RPCs: CRUD de Product, CRUD/list de UnitOfMeasure, RPC de conversão)
+- [x] Escrever proto `catalog.proto` (RPCs: CRUD de Product, CRUD/list de UnitOfMeasure, RPC de conversão)
+  *(feito em 2026-09-16 — `proto/catalog/v1/catalog.proto`, pacote `catalog.v1` desde o início (sem precisar migrar depois, como o auth). `CreateProduct`/`ListProducts`/`DeactivateProduct`, `CreateUnitOfMeasure`/`ListUnitsOfMeasure`, `ConvertToKg`/`ConvertFromKg` espelhando os métodos Go. Fatores decimais trafegam como `string` no proto — protobuf não tem tipo decimal nativo, evita perder a precisão do `shopspring/decimal` na rede. `buf lint` limpo, gerado em `internal/pb/catalog/v1/`)*
 - [x] Migrations + modelos GORM (products, units_of_measure)
   *(`migrations/000001_create_products_table.*` e `000002_create_units_of_measure_table.*`, aplicadas e revertidas contra Postgres real — `up`/`down` testados)*
 - [ ] Implementar RPCs e testes unitários (especial atenção nos testes de conversão de unidade — casos de borda tipo fração de kg)
