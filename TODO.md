@@ -200,7 +200,8 @@ Convenções:
   *(`migrations/000001_create_products_table.*` e `000002_create_units_of_measure_table.*`, aplicadas e revertidas contra Postgres real — `up`/`down` testados)*
 - [x] Implementar RPCs e testes unitários (especial atenção nos testes de conversão de unidade — casos de borda tipo fração de kg)
   *(feito em 2026-09-16 — `internal/grpcserver/server.go`: os 7 RPCs (`CreateProduct`, `ListProducts`, `DeactivateProduct`, `CreateUnitOfMeasure`, `ListUnitsOfMeasure`, `ConvertToKg`, `ConvertFromKg`), registrados no `main.go`. Achado no caminho: `UnitOfMeasure` precisou de `TableName() string` — o GORM adivinha nome de tabela pluralizando a struct (`unit_of_measures`), que não batia com a migration (`units_of_measure`); `Product` só funcionou por coincidência. Teste de integração (`catalog_test.go`, testcontainers) cobre o fluxo completo create→convert→list→deactivate→list. Validado também na mão via `grpcurl` com reflection. Primeira adoção do `testify` (`assert`/`require`) no projeto — só em testes novos daqui pra frente, os antigos (auth-service, `conversion_test.go`) ficam com `testing` puro, decisão deliberada de não misturar refactor de estilo com trabalho novo)*
-- [ ] Seed de dados inicial (as unidades padrão já listadas, alguns produtos de exemplo)
+- [x] Seed de dados inicial (as unidades padrão já listadas, alguns produtos de exemplo)
+  *(feito em 2026-09-16 — `migrations/000003_seed_catalog_data.{up,down}.sql`: as 8 unidades da Fase 1 (fardo 30/10kg, pacote 5/1kg, saco 25/50/60kg, granel com fator 1 — vende direto em kg) + 5 produtos de exemplo mais realistas que o mínimo (incluindo subprodutos: resíduo e farelo de arroz). `down` remove só as linhas por nome, não dá DROP — cada migration desfaz só o que ela própria fez. Testado up+down em sequência com as 3 migrations juntas)*
 - [ ] Deploy no k8s + validação de métricas/traces (deve ser mais rápido que o auth-service, já que o template está validado)
 
 ### inventory-service
