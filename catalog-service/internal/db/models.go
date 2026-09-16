@@ -5,6 +5,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func (UnitOfMeasure) TableName() string {
+	return "units_of_measure"
+}
+
 type Product struct {
 	ID 			string `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Name		string `gorm:"not null"`

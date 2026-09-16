@@ -24,3 +24,9 @@ func (r *UnitOfMeasureRepository) FindByID(id string) (*UnitOfMeasure, error) {
 	}
 	return &unitOfMeasure, nil
 }
+
+func (r *UnitOfMeasureRepository) List() ([]UnitOfMeasure, error) {
+	var units []UnitOfMeasure
+	err := r.db.Find(&units).Error
+	return units, err
+}
