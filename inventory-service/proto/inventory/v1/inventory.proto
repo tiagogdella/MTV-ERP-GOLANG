@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package inventory.v1;
+
+option go_package = "mtv-erp/inventory-service/internal/pb/inventory/v1;inventoryv1";
+
+message Lot {
+  string id = 1;
+  string product_id = 2;
+  string purchase_item_id = 3;
+  string safra = 4;
+  string quantity_kg = 5;
+  string received_at = 6;
+}
+
+message CreateLotRequest {
+  string product_id = 1;
+  string purchase_item_id = 2;
+  string safra = 3;
+  string quantity_kg = 4;
+  string received_at = 5;
+}
+
+message CreateLotResponse {
+  Lot lot = 1;
+}
+
+message StockMovement {
+  string id = 1;
+  string lot_id = 2;
+  string type = 3;
+  string quantity_kg = 4;
+  string occurred_at = 5;
+  string origin = 6;
+}
+
+message RegisterMovementRequest {
+  string lot_id = 1;
+  string type = 2;
+  string quantity_kg = 3;
+  string occurred_at = 4;
+  string origin = 5;
+}
+
+message RegisterMovementResponse {
+  StockMovement movement = 1;
+}
+
+message GetStockByProductRequest {
+  string product_id = 1;
+}
+
+message GetStockByProductResponse {
+  string total_kg = 1;
+}
+
+message GetLotDetailsRequest {
+  string lot_id = 1;
+}
+
+message GetLotDetailsResponse {
+  Lot lot = 1;
+  repeated StockMovement movements = 2;
+  string balance_kg = 3;
+}
+
+service InventoryService {
+  rpc CreateLot(CreateLotRequest) returns (CreateLotResponse);
+  rpc RegisterMovement(RegisterMovementRequest) returns (RegisterMovementResponse);
+  rpc GetStockByProduct(GetStockByProductRequest) returns (GetStockByProductResponse);
+  rpc GetLotDetails(GetLotDetailsRequest) returns (GetLotDetailsResponse);
+}

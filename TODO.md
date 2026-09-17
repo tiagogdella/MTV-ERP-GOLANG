@@ -214,7 +214,8 @@ Convenções:
   *(`LotID` é FK **física** de verdade (`REFERENCES lots(id)` na migration) — diferente do `Lot`, porque `StockMovement` e `Lot` moram no mesmo banco. Testado: insert com `lot_id` inventado é rejeitado pelo Postgres, prova que a FK está ativa)*
 - [ ] Implementar validação de domínio explícita: **rejeitar qualquer movimentação de estoque sem lote associado** (regra de negócio, não só constraint de banco)
   📚 Estudar: onde colocar validação de invariante de domínio em Go — validação na camada de serviço vs constraint NOT NULL no banco (fazer as duas, mas a de domínio é a que dá erro de negócio claro)
-- [ ] Escrever proto `inventory.proto` (RPCs: CreateLot, RegisterMovement, GetStockByProduct, GetLotDetails)
+- [x] Escrever proto `inventory.proto` (RPCs: CreateLot, RegisterMovement, GetStockByProduct, GetLotDetails)
+  *(feito em 2026-09-17 — `proto/inventory/v1/inventory.proto`, pacote `inventory.v1` desde o início. `GetLotDetails` devolve o lote + todas as movimentações + saldo calculado (cobre RF-INV-5 de uma vez); `GetStockByProduct` só o total agregado em kg. Valores decimais como `string`, mesmo padrão do catalog. `buf lint` limpo, gerado em `internal/pb/inventory/v1/`)*
 - [x] Migrations + modelos GORM (lots, stock_movements)
   *(migrations/000001_create_lots_table e 000002_create_stock_movements_table, aplicadas e revertidas contra Postgres real, nessa ordem por causa da FK. `LotRepository` (Create/FindByID) e `StockMovementRepository` (Create/ListByLot))*
 - [ ] Implementar RPCs com a validação de lote obrigatório
