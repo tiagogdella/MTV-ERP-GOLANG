@@ -18,6 +18,8 @@ import (
 	"mtv-erp/inventory-service/internal/observability"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"mtv-erp/inventory-service/internal/interceptors"
+	"mtv-erp/inventory-service/internal/grpcserver" 
+	inventoryv1 "mtv-erp/inventory-service/internal/pb/inventory/v1"
 )
 
 func main() {
@@ -46,8 +48,10 @@ func main() {
 	}
 
 	slog.Info("Conectado ao banco de dados")
-	_ = database // rep e ser gRPC do servicço entram aqui
-	
+
+	lotRepo := db.NewLotsRepository(database)
+	movementRepo := db.NewStockMovementRepository(database)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
@@ -55,6 +59,8 @@ func main() {
 			interceptors.Logging(),
 		),
 	)
+
+	inventoryv1.RegisterInventoryServiceServer(grpcServer, grpcserver.NewServer(lotRepo, movementRepo))
 
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()

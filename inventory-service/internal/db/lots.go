@@ -25,3 +25,8 @@ func (l *LotRepository) FindByID(id string) (*Lot, error) {
 	return &lot, nil
 }
 
+func (l *LotRepository) ListByProduct(productID string) ([]Lot, error) {
+	var lots []Lot
+	err := l.db.Where("product_id = ?", productID).Find(&lots).Error
+	return lots, err
+}

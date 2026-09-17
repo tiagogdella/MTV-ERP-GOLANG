@@ -212,13 +212,15 @@ Convenções:
   *(feito em 2026-09-17 — `internal/db/models.go`: `ProductID`/`PurchaseItemID` são referência lógica (outro serviço/banco, sem FK física, ADR-0002) — fornecedor não é campo direto, chega-se nele via `PurchaseItemID` → a compra, evita duplicar dado. `ReceivedAt` com `gorm:"type:date"` — só a data, sem hora, como o modelo pede)*
 - [x] Modelar entidade `StockMovement` (tipo: entrada/saída, quantidade em kg, lote associado, timestamp, origem do movimento)
   *(`LotID` é FK **física** de verdade (`REFERENCES lots(id)` na migration) — diferente do `Lot`, porque `StockMovement` e `Lot` moram no mesmo banco. Testado: insert com `lot_id` inventado é rejeitado pelo Postgres, prova que a FK está ativa)*
-- [ ] Implementar validação de domínio explícita: **rejeitar qualquer movimentação de estoque sem lote associado** (regra de negócio, não só constraint de banco)
+- [x] Implementar validação de domínio explícita: **rejeitar qualquer movimentação de estoque sem lote associado** (regra de negócio, não só constraint de banco)
+  *(feito em 2026-09-17 — `RegisterMovement` chama `lotRepo.FindByID` **antes** de gravar; se não achar, devolve `codes.NotFound` com mensagem clara, em vez de deixar a FK do Postgres estourar um erro genérico. Validado na mão via grpcurl)*
   📚 Estudar: onde colocar validação de invariante de domínio em Go — validação na camada de serviço vs constraint NOT NULL no banco (fazer as duas, mas a de domínio é a que dá erro de negócio claro)
 - [x] Escrever proto `inventory.proto` (RPCs: CreateLot, RegisterMovement, GetStockByProduct, GetLotDetails)
   *(feito em 2026-09-17 — `proto/inventory/v1/inventory.proto`, pacote `inventory.v1` desde o início. `GetLotDetails` devolve o lote + todas as movimentações + saldo calculado (cobre RF-INV-5 de uma vez); `GetStockByProduct` só o total agregado em kg. Valores decimais como `string`, mesmo padrão do catalog. `buf lint` limpo, gerado em `internal/pb/inventory/v1/`)*
 - [x] Migrations + modelos GORM (lots, stock_movements)
   *(migrations/000001_create_lots_table e 000002_create_stock_movements_table, aplicadas e revertidas contra Postgres real, nessa ordem por causa da FK. `LotRepository` (Create/FindByID) e `StockMovementRepository` (Create/ListByLot))*
-- [ ] Implementar RPCs com a validação de lote obrigatório
+- [x] Implementar RPCs com a validação de lote obrigatório
+  *(feito em 2026-09-17 — os 4 RPCs (`CreateLot`, `RegisterMovement`, `GetStockByProduct`, `GetLotDetails`) em `internal/grpcserver/server.go`, registrados no `main.go`. Decisão de design: `quantity_kg` da movimentação é **assinado** (positivo entrada, negativo saída/ajuste-pra-baixo) — saldo é soma direta, `type` fica só como metadado descritivo, não determina o sinal. Testado de ponta a ponta via grpcurl contra Postgres real: CreateLot → 2 movimentações → saldo 700 (1000-300) certo em `GetLotDetails` e `GetStockByProduct`)*
 - [ ] Testes unitários da regra "sem lote não existe estoque" (caso de erro esperado)
 - [ ] Testes de consulta de saldo de estoque agregado por produto (soma de lotes)
 - [ ] Deploy no k8s + validação de métricas/traces
