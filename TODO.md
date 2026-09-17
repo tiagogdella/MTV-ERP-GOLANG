@@ -206,13 +206,17 @@ Convenções:
   *(feito em 2026-09-16 — `deploy/catalog-db/` e `deploy/catalog-service/` copiados de `auth-db`/`auth-service` via `cp`+`sed` (nomes trocados em lote). Imagem no ghcr.io (camadas reaproveitadas do `auth-service`, mesma base). Achado no caminho: senha gerada com `openssl rand -base64` continha `+`, que quebra dentro de uma DATABASE_URL — trocado pra `-hex` (só `0-9a-f`, sempre seguro em URL) e banco recriado. Pod rodando, 8 unidades + 5 produtos do seed confirmados via grpcurl contra o pod real, conversão testada (3×25=75kg). Prometheus com job novo (`catalog-service` → NodePort `30081`) confirmado `UP`; traces das chamadas reais aparecendo no Jaeger. Deploy inteiro (da imagem pronta até validado) bem mais rápido que o do auth-service, como esperado)*
 
 ### inventory-service
-- [ ] Clonar template pra `inventory-service`
-- [ ] Modelar entidade `Lot` (código, safra, fornecedor de origem, data de recebimento, quantidade em kg, produto associado — produto referenciado por ID lógico do catalog-service)
-- [ ] Modelar entidade `StockMovement` (tipo: entrada/saída, quantidade em kg, lote associado, timestamp, origem do movimento)
+- [x] Clonar template pra `inventory-service`
+  *(feito em 2026-09-17 — mesmo processo do catalog-service: `cp -r` + módulo renomeado via `sed` em todos os `.go`, proto de exemplo removido, build/vet/test limpos)*
+- [x] Modelar entidade `Lot` (código, safra, fornecedor de origem, data de recebimento, quantidade em kg, produto associado — produto referenciado por ID lógico do catalog-service)
+  *(feito em 2026-09-17 — `internal/db/models.go`: `ProductID`/`PurchaseItemID` são referência lógica (outro serviço/banco, sem FK física, ADR-0002) — fornecedor não é campo direto, chega-se nele via `PurchaseItemID` → a compra, evita duplicar dado. `ReceivedAt` com `gorm:"type:date"` — só a data, sem hora, como o modelo pede)*
+- [x] Modelar entidade `StockMovement` (tipo: entrada/saída, quantidade em kg, lote associado, timestamp, origem do movimento)
+  *(`LotID` é FK **física** de verdade (`REFERENCES lots(id)` na migration) — diferente do `Lot`, porque `StockMovement` e `Lot` moram no mesmo banco. Testado: insert com `lot_id` inventado é rejeitado pelo Postgres, prova que a FK está ativa)*
 - [ ] Implementar validação de domínio explícita: **rejeitar qualquer movimentação de estoque sem lote associado** (regra de negócio, não só constraint de banco)
   📚 Estudar: onde colocar validação de invariante de domínio em Go — validação na camada de serviço vs constraint NOT NULL no banco (fazer as duas, mas a de domínio é a que dá erro de negócio claro)
 - [ ] Escrever proto `inventory.proto` (RPCs: CreateLot, RegisterMovement, GetStockByProduct, GetLotDetails)
-- [ ] Migrations + modelos GORM (lots, stock_movements)
+- [x] Migrations + modelos GORM (lots, stock_movements)
+  *(migrations/000001_create_lots_table e 000002_create_stock_movements_table, aplicadas e revertidas contra Postgres real, nessa ordem por causa da FK. `LotRepository` (Create/FindByID) e `StockMovementRepository` (Create/ListByLot))*
 - [ ] Implementar RPCs com a validação de lote obrigatório
 - [ ] Testes unitários da regra "sem lote não existe estoque" (caso de erro esperado)
 - [ ] Testes de consulta de saldo de estoque agregado por produto (soma de lotes)
