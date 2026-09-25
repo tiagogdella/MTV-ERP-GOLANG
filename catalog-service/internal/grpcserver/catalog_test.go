@@ -15,6 +15,9 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"mtv-erp/catalog-service/internal/db"
 	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
+	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestCatalogServiceIntegration(t *testing.T) {
@@ -46,7 +49,8 @@ func TestCatalogServiceIntegration(t *testing.T) {
 
 	productRepo := db.NewProductRepository(database)
 	unitRepo := db.NewUnitOfMeasureRepository(database)
-	server := NewServer(productRepo, unitRepo)
+	supplierRepo := db.NewSupplierRepository(database)
+	server := NewServer(productRepo, unitRepo, supplierRepo)
 
 	unitResp, err := server.CreateUnitOfMeasure(ctx, &catalogv1.CreateUnitOfMeasureRequest{
 		Name:               "fardo 30kg",
@@ -54,7 +58,7 @@ func TestCatalogServiceIntegration(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = server.CreateProduct(ctx, &catalogv1.CreateProductRequest{
+	createProductResp, err := server.CreateProduct(ctx, &catalogv1.CreateProductRequest{
 		Name: "Arroz tipo 1",
 	})
 	require.NoError(t, err)
@@ -68,14 +72,62 @@ func TestCatalogServiceIntegration(t *testing.T) {
 
 	listResp, err := server.ListProducts(ctx, &catalogv1.ListProductsRequest{})
 	require.NoError(t, err)
-	require.Len(t, listResp.Products, 1)
+	assert.True(t, containsProductID(listResp.Products, createProductResp.Product.Id))
 
 	_, err = server.DeactivateProduct(ctx, &catalogv1.DeactivateProductRequest{
-		Id: listResp.Products[0].Id,
+		Id: createProductResp.Product.Id,
 	})
 	require.NoError(t, err)
 
+	getProductResp, err := server.GetProduct(ctx, &catalogv1.GetProductRequest{Id: createProductResp.Product.Id})
+	require.NoError(t, err)
+	assert.Equal(t, "Arroz tipo 1", getProductResp.Product.Name)
+
+	_, err = server.GetProduct(ctx, &catalogv1.GetProductRequest{Id: uuid.NewString()})
+	require.Error(t, err)
+	assert.Equal(t, codes.NotFound, status.Code(err))
+
 	listResp2, err := server.ListProducts(ctx, &catalogv1.ListProductsRequest{})
 	require.NoError(t, err)
-	assert.Len(t, listResp2.Products, 0)
+	assert.False(t, containsProductID(listResp2.Products, createProductResp.Product.Id))
+
+	supplierResp, err := server.CreateSupplier(ctx, &catalogv1.CreateSupplierRequest{
+		Name:     "Fornecedor Teste Ltda",
+		Document: "12.345.678/0001-90",
+		Address:  "Rua Exemplo, 123",
+	})
+	require.NoError(t, err)
+	assert.True(t, supplierResp.Supplier.Active)
+
+	getSupplierResp, err := server.GetSupplier(ctx, &catalogv1.GetSupplierRequest{Id: supplierResp.Supplier.Id})
+	require.NoError(t, err)
+	assert.Equal(t, "Fornecedor Teste Ltda", getSupplierResp.Supplier.Name)
+
+	_, err = server.GetSupplier(ctx, &catalogv1.GetSupplierRequest{Id: uuid.NewString()})
+	require.Error(t, err)
+	assert.Equal(t, codes.NotFound, status.Code(err))
+
+	listSuppliersResp, err := server.ListSuppliers(ctx, &catalogv1.ListSuppliersRequest{})
+	require.NoError(t, err)
+	require.Len(t, listSuppliersResp.Suppliers, 1)
+
+	_, err = server.DeactivateSupplier(ctx, &catalogv1.DeactivateSupplierRequest{
+		Id: listSuppliersResp.Suppliers[0].Id,
+	})
+	require.NoError(t, err)
+
+	listSuppliersResp2, err := server.ListSuppliers(ctx, &catalogv1.ListSuppliersRequest{})
+	require.NoError(t, err)
+	assert.Len(t, listSuppliersResp2.Suppliers, 0)
+
 }
+
+func containsProductID(products []*catalogv1.Product, id string) bool {
+	for _, p := range products {
+		if p.Id == id {
+			return true
+		}
+	}
+	return false
+}
+

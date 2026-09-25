@@ -6,16 +6,19 @@ import (
 	"mtv-erp/catalog-service/internal/db"
 	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
 	"github.com/shopspring/decimal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type Server struct {
 	catalogv1.UnimplementedCatalogServiceServer
-	productRepo *db.ProductRepository
-	unitRepo    *db.UnitOfMeasureRepository
+	productRepo  *db.ProductRepository
+	unitRepo     *db.UnitOfMeasureRepository
+	supplierRepo *db.SupplierRepository
 }
 
-func NewServer(productRepo *db.ProductRepository, unitRepo *db.UnitOfMeasureRepository) *Server {
-	return &Server{productRepo: productRepo, unitRepo: unitRepo}
+func NewServer(productRepo *db.ProductRepository, unitRepo *db.UnitOfMeasureRepository, supplierRepo *db.SupplierRepository) *Server {
+	return &Server{productRepo: productRepo, unitRepo: unitRepo, supplierRepo: supplierRepo}
 }
 
 func (s *Server) CreateProduct(ctx context.Context, req *catalogv1.CreateProductRequest) (*catalogv1.CreateProductResponse, error) {
@@ -141,5 +144,89 @@ func (s *Server) ConvertFromKg(ctx context.Context, req *catalogv1.ConvertFromKg
 
 	return &catalogv1.ConvertFromKgResponse{
 		Quantity: quantity.String(),
+	}, nil
+}
+
+func (s *Server) CreateSupplier(ctx context.Context, req *catalogv1.CreateSupplierRequest) (*catalogv1.CreateSupplierResponse, error) {
+	supplier := &db.Supplier{
+		Name:     req.Name,
+		Document: req.Document,
+		Address:  req.Address,
+	}
+
+	if err := s.supplierRepo.Create(supplier); err != nil {
+		return nil, err
+	}
+
+	return &catalogv1.CreateSupplierResponse{
+		Supplier: &catalogv1.Supplier{
+			Id:       supplier.ID,
+			Name:     supplier.Name,
+			Document: supplier.Document,
+			Address:  supplier.Address,
+			Active:   supplier.Active,
+		},
+	}, nil
+}
+
+func (s *Server) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliersRequest) (*catalogv1.ListSuppliersResponse, error) {
+	suppliers, err := s.supplierRepo.ListActive()
+	if err != nil {
+		return nil, err
+	}
+
+	var pbSuppliers []*catalogv1.Supplier
+	for _, supplier := range suppliers {
+		pbSuppliers = append(pbSuppliers, &catalogv1.Supplier{
+			Id:       supplier.ID,
+			Name:     supplier.Name,
+			Document: supplier.Document,
+			Address:  supplier.Address,
+			Active:   supplier.Active,
+		})
+	}
+
+	return &catalogv1.ListSuppliersResponse{
+		Suppliers: pbSuppliers,
+	}, nil
+}
+
+func (s *Server) DeactivateSupplier(ctx context.Context, req *catalogv1.DeactivateSupplierRequest) (*catalogv1.DeactivateSupplierResponse, error) {
+	if err := s.supplierRepo.Deactivate(req.Id); err != nil {
+		return nil, err
+	}
+
+	return &catalogv1.DeactivateSupplierResponse{}, nil
+}
+
+func (s *Server) GetProduct(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.GetProductResponse, error) {
+	product, err := s.productRepo.FindByID(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
+	}
+
+	return &catalogv1.GetProductResponse{
+		Product: &catalogv1.Product{
+			Id:     product.ID,
+			Name:   product.Name,
+			Active: product.Active,
+		},
+	}, nil
+}
+
+func (s *Server) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequest) (*catalogv1.GetSupplierResponse, error) {
+	supplier, err := s.supplierRepo.FindByID(req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
+	}
+
+	return &catalogv1.GetSupplierResponse{
+		Supplier: &catalogv1.Supplier{
+			Id:       supplier.ID,
+			Name:     supplier.Name,
+			Document: supplier.Document,
+			Address:  supplier.Address,
+			Active:   supplier.Active,
+		},
 	}, nil
 }

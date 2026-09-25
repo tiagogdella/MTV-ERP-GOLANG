@@ -16,6 +16,15 @@ func (r *ProductRepository) Create(product *Product) error {
 	return r.db.Create(product).Error
 }
 
+func (r *ProductRepository) FindByID(id string) (*Product, error) {
+	var product Product
+	err := r.db.Where("id = ?", id).First(&product).Error
+	if err != nil {
+		return nil, err
+	}
+	return &product, nil
+}
+
 func (r *ProductRepository) ListActive() ([]Product, error) {
 	var products []Product
 	err := r.db.Where("active = ?", true).Find(&products).Error

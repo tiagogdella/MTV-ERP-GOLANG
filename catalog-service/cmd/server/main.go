@@ -50,7 +50,8 @@ func main() {
 	slog.Info("Conectado ao banco de dados")
 	productRepo := db.NewProductRepository(database)
 	unitRepo := db.NewUnitOfMeasureRepository(database)
-	
+	supplierRepo := db.NewSupplierRepository(database)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
@@ -59,7 +60,7 @@ func main() {
 		),
 	)
 
-	catalogv1.RegisterCatalogServiceServer(grpcServer, grpcserver.NewServer(productRepo, unitRepo))
+	catalogv1.RegisterCatalogServiceServer(grpcServer, grpcserver.NewServer(productRepo, unitRepo, supplierRepo))
 
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()

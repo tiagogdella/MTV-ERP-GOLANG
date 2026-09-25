@@ -30,6 +30,52 @@ message CreateProductResponse {
   Product product = 1;
 }
 
+message GetProductRequest {
+  string id = 1;
+}
+
+message GetProductResponse {
+  Product product = 1;
+}
+
+message Supplier {
+  string id = 1;
+  string name = 2;
+  string document = 3;
+  string address = 4;
+  bool active = 5;
+}
+
+message CreateSupplierRequest {
+  string name = 1;
+  string document = 2;
+  string address = 3;
+}
+
+message CreateSupplierResponse {
+  Supplier supplier = 1;
+}
+
+message ListSuppliersRequest {}
+
+message ListSuppliersResponse {
+  repeated Supplier suppliers = 1;
+}
+
+message DeactivateSupplierRequest {
+  string id = 1;
+}
+
+message DeactivateSupplierResponse {}
+
+message GetSupplierRequest {
+  string id = 1;
+}
+
+message GetSupplierResponse {
+  Supplier supplier = 1;
+}
+
 message UnitOfMeasure {
   string id = 1;
   string name = 2;
@@ -73,6 +119,12 @@ service CatalogService {
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
   rpc DeactivateProduct(DeactivateProductRequest) returns (DeactivateProductResponse);
+  rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+  
+  rpc CreateSupplier(CreateSupplierRequest) returns (CreateSupplierResponse);
+  rpc ListSuppliers(ListSuppliersRequest) returns (ListSuppliersResponse);
+  rpc DeactivateSupplier(DeactivateSupplierRequest) returns (DeactivateSupplierResponse);
+  rpc GetSupplier(GetSupplierRequest) returns (GetSupplierResponse); 
 
   rpc CreateUnitOfMeasure(CreateUnitOfMeasureRequest) returns (CreateUnitOfMeasureResponse);
   rpc ListUnitsOfMeasure(ListUnitsOfMeasureRequest) returns (ListUnitsOfMeasureResponse);

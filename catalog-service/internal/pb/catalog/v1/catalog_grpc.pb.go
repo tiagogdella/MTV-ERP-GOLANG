@@ -22,6 +22,11 @@ const (
 	CatalogService_CreateProduct_FullMethodName       = "/catalog.v1.CatalogService/CreateProduct"
 	CatalogService_ListProducts_FullMethodName        = "/catalog.v1.CatalogService/ListProducts"
 	CatalogService_DeactivateProduct_FullMethodName   = "/catalog.v1.CatalogService/DeactivateProduct"
+	CatalogService_GetProduct_FullMethodName          = "/catalog.v1.CatalogService/GetProduct"
+	CatalogService_CreateSupplier_FullMethodName      = "/catalog.v1.CatalogService/CreateSupplier"
+	CatalogService_ListSuppliers_FullMethodName       = "/catalog.v1.CatalogService/ListSuppliers"
+	CatalogService_DeactivateSupplier_FullMethodName  = "/catalog.v1.CatalogService/DeactivateSupplier"
+	CatalogService_GetSupplier_FullMethodName         = "/catalog.v1.CatalogService/GetSupplier"
 	CatalogService_CreateUnitOfMeasure_FullMethodName = "/catalog.v1.CatalogService/CreateUnitOfMeasure"
 	CatalogService_ListUnitsOfMeasure_FullMethodName  = "/catalog.v1.CatalogService/ListUnitsOfMeasure"
 	CatalogService_ConvertToKg_FullMethodName         = "/catalog.v1.CatalogService/ConvertToKg"
@@ -35,6 +40,11 @@ type CatalogServiceClient interface {
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	DeactivateProduct(ctx context.Context, in *DeactivateProductRequest, opts ...grpc.CallOption) (*DeactivateProductResponse, error)
+	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error)
+	CreateSupplier(ctx context.Context, in *CreateSupplierRequest, opts ...grpc.CallOption) (*CreateSupplierResponse, error)
+	ListSuppliers(ctx context.Context, in *ListSuppliersRequest, opts ...grpc.CallOption) (*ListSuppliersResponse, error)
+	DeactivateSupplier(ctx context.Context, in *DeactivateSupplierRequest, opts ...grpc.CallOption) (*DeactivateSupplierResponse, error)
+	GetSupplier(ctx context.Context, in *GetSupplierRequest, opts ...grpc.CallOption) (*GetSupplierResponse, error)
 	CreateUnitOfMeasure(ctx context.Context, in *CreateUnitOfMeasureRequest, opts ...grpc.CallOption) (*CreateUnitOfMeasureResponse, error)
 	ListUnitsOfMeasure(ctx context.Context, in *ListUnitsOfMeasureRequest, opts ...grpc.CallOption) (*ListUnitsOfMeasureResponse, error)
 	ConvertToKg(ctx context.Context, in *ConvertToKgRequest, opts ...grpc.CallOption) (*ConvertToKgResponse, error)
@@ -73,6 +83,56 @@ func (c *catalogServiceClient) DeactivateProduct(ctx context.Context, in *Deacti
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeactivateProductResponse)
 	err := c.cc.Invoke(ctx, CatalogService_DeactivateProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProductResponse)
+	err := c.cc.Invoke(ctx, CatalogService_GetProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) CreateSupplier(ctx context.Context, in *CreateSupplierRequest, opts ...grpc.CallOption) (*CreateSupplierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSupplierResponse)
+	err := c.cc.Invoke(ctx, CatalogService_CreateSupplier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) ListSuppliers(ctx context.Context, in *ListSuppliersRequest, opts ...grpc.CallOption) (*ListSuppliersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSuppliersResponse)
+	err := c.cc.Invoke(ctx, CatalogService_ListSuppliers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) DeactivateSupplier(ctx context.Context, in *DeactivateSupplierRequest, opts ...grpc.CallOption) (*DeactivateSupplierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeactivateSupplierResponse)
+	err := c.cc.Invoke(ctx, CatalogService_DeactivateSupplier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetSupplier(ctx context.Context, in *GetSupplierRequest, opts ...grpc.CallOption) (*GetSupplierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSupplierResponse)
+	err := c.cc.Invoke(ctx, CatalogService_GetSupplier_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +186,11 @@ type CatalogServiceServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
 	DeactivateProduct(context.Context, *DeactivateProductRequest) (*DeactivateProductResponse, error)
+	GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error)
+	CreateSupplier(context.Context, *CreateSupplierRequest) (*CreateSupplierResponse, error)
+	ListSuppliers(context.Context, *ListSuppliersRequest) (*ListSuppliersResponse, error)
+	DeactivateSupplier(context.Context, *DeactivateSupplierRequest) (*DeactivateSupplierResponse, error)
+	GetSupplier(context.Context, *GetSupplierRequest) (*GetSupplierResponse, error)
 	CreateUnitOfMeasure(context.Context, *CreateUnitOfMeasureRequest) (*CreateUnitOfMeasureResponse, error)
 	ListUnitsOfMeasure(context.Context, *ListUnitsOfMeasureRequest) (*ListUnitsOfMeasureResponse, error)
 	ConvertToKg(context.Context, *ConvertToKgRequest) (*ConvertToKgResponse, error)
@@ -148,6 +213,21 @@ func (UnimplementedCatalogServiceServer) ListProducts(context.Context, *ListProd
 }
 func (UnimplementedCatalogServiceServer) DeactivateProduct(context.Context, *DeactivateProductRequest) (*DeactivateProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeactivateProduct not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProduct not implemented")
+}
+func (UnimplementedCatalogServiceServer) CreateSupplier(context.Context, *CreateSupplierRequest) (*CreateSupplierResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSupplier not implemented")
+}
+func (UnimplementedCatalogServiceServer) ListSuppliers(context.Context, *ListSuppliersRequest) (*ListSuppliersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSuppliers not implemented")
+}
+func (UnimplementedCatalogServiceServer) DeactivateSupplier(context.Context, *DeactivateSupplierRequest) (*DeactivateSupplierResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeactivateSupplier not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetSupplier(context.Context, *GetSupplierRequest) (*GetSupplierResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSupplier not implemented")
 }
 func (UnimplementedCatalogServiceServer) CreateUnitOfMeasure(context.Context, *CreateUnitOfMeasureRequest) (*CreateUnitOfMeasureResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateUnitOfMeasure not implemented")
@@ -232,6 +312,96 @@ func _CatalogService_DeactivateProduct_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CatalogServiceServer).DeactivateProduct(ctx, req.(*DeactivateProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetProduct(ctx, req.(*GetProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_CreateSupplier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSupplierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).CreateSupplier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_CreateSupplier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).CreateSupplier(ctx, req.(*CreateSupplierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_ListSuppliers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSuppliersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).ListSuppliers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_ListSuppliers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).ListSuppliers(ctx, req.(*ListSuppliersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_DeactivateSupplier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeactivateSupplierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).DeactivateSupplier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_DeactivateSupplier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).DeactivateSupplier(ctx, req.(*DeactivateSupplierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetSupplier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSupplierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetSupplier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetSupplier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetSupplier(ctx, req.(*GetSupplierRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -326,6 +496,26 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeactivateProduct",
 			Handler:    _CatalogService_DeactivateProduct_Handler,
+		},
+		{
+			MethodName: "GetProduct",
+			Handler:    _CatalogService_GetProduct_Handler,
+		},
+		{
+			MethodName: "CreateSupplier",
+			Handler:    _CatalogService_CreateSupplier_Handler,
+		},
+		{
+			MethodName: "ListSuppliers",
+			Handler:    _CatalogService_ListSuppliers_Handler,
+		},
+		{
+			MethodName: "DeactivateSupplier",
+			Handler:    _CatalogService_DeactivateSupplier_Handler,
+		},
+		{
+			MethodName: "GetSupplier",
+			Handler:    _CatalogService_GetSupplier_Handler,
 		},
 		{
 			MethodName: "CreateUnitOfMeasure",
