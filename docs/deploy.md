@@ -61,12 +61,14 @@ Usando `service-template` como exemplo — o mesmo fluxo vale pra qualquer servi
 
 2. **Aplicar os manifests** (primeira vez, ou quando o `deployment.yaml`/`service.yaml`/etc. mudou) ou **forçar novo rollout** (quando só a imagem mudou, mesma tag `:latest`) — na máquina de dev:
    ```bash
-   kubectl apply -f deploy/<nome-do-servico>/
+   kubectl apply -f deploy/<nome-do-servico>/configmap.yaml -f deploy/<nome-do-servico>/deployment.yaml -f deploy/<nome-do-servico>/service.yaml -f deploy/<nome-do-servico>/service-metrics.yaml
    # ou, se os manifests não mudaram e só a imagem foi atualizada:
    kubectl rollout restart deployment/<nome-do-servico> -n mtv-erp
    kubectl rollout status deployment/<nome-do-servico> -n mtv-erp
    ```
    ⚠️ Com tag `:latest`, o Kubernetes **não percebe sozinho** que a imagem mudou — por isso o `rollout restart` é necessário mesmo com `imagePullPolicy: Always`. Isso some quando o CI/CD passar a taggear imagens com hash de commit.
+
+   ⚠️ **Nunca dar `kubectl apply -f deploy/<nome-do-servico>/` na pasta inteira** — cada serviço tem um `secret.yaml` que é só um **molde de exemplo** (senha literal `SENHA`, nunca preenchida de verdade), documentado dentro do próprio arquivo. Aplicar a pasta toda aplica esse molde também e **sobrescreve o Secret real** criado na mão (`kubectl create secret ...`), quebrando a conexão com o banco (`password authentication failed`). Foi o que aconteceu no deploy do inventory-service em 2026-09-23. Lista os arquivos explícitos (como no comando acima) ou aplica um por um, sempre pulando o `secret.yaml`.
 
 3. **Testar** (o `Service` é `ClusterIP`, só acessível de dentro do cluster):
    ```bash
