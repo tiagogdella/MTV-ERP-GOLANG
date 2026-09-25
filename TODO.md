@@ -205,6 +205,24 @@ Convenções:
 - [x] Deploy no k8s + validação de métricas/traces (deve ser mais rápido que o auth-service, já que o template está validado)
   *(feito em 2026-09-16 — `deploy/catalog-db/` e `deploy/catalog-service/` copiados de `auth-db`/`auth-service` via `cp`+`sed` (nomes trocados em lote). Imagem no ghcr.io (camadas reaproveitadas do `auth-service`, mesma base). Achado no caminho: senha gerada com `openssl rand -base64` continha `+`, que quebra dentro de uma DATABASE_URL — trocado pra `-hex` (só `0-9a-f`, sempre seguro em URL) e banco recriado. Pod rodando, 8 unidades + 5 produtos do seed confirmados via grpcurl contra o pod real, conversão testada (3×25=75kg). Prometheus com job novo (`catalog-service` → NodePort `30081`) confirmado `UP`; traces das chamadas reais aparecendo no Jaeger. Deploy inteiro (da imagem pronta até validado) bem mais rápido que o do auth-service, como esperado)*
 
+*(reaberto em 2026-09-24 — `CATALOG_SUPPLIER` já estava desenhado em `docs/modelo-dados.md` desde a Fase 1, mas nunca virou tarefa aqui. Achado ao planejar o purchasing-service: RF-PUR-1/RN2 exige "compra deve referenciar um fornecedor cadastrado", e não existe cadastro de fornecedor em lugar nenhum do código. Bloqueia o purchasing-service, então entra antes dele.)*
+- [x] Modelar entidade `Supplier` (fornecedor — `id`, `nome`, `documento`, `endereco`, `active`), campos simples conforme `docs/modelo-dados.md` (sem separar CNPJ/CPF/IE por tipo de pessoa, mais simples que a leitura literal de RF-CAT-4)
+  *(feito em 2026-09-24 — `internal/db/models.go`/`suppliers.go`, mesmo molde do `Product`: `SupplierRepository.Create`/`ListActive`/`Deactivate`, sem `Delete` de verdade. Não precisou de `TableName()` — `Supplier` pluraliza certo pra `suppliers` sozinho)*
+- [x] Migration + modelo GORM (`suppliers`)
+  *(feito em 2026-09-24 — `migrations/000004_create_suppliers_table.{up,down}.sql`, mesmo estilo do `products`)*
+- [x] Adicionar RPCs no `catalog.proto`: `CreateSupplier`, `ListSuppliers`, `DeactivateSupplier` (mesmo padrão de `Product` — soft delete, sem `Delete` de verdade)
+  *(feito em 2026-09-24 — `buf lint` limpo, gerado em `internal/pb/catalog/v1/`)*
+- [x] Implementar RPCs + testes (mesmo padrão de integração com testcontainers)
+  *(feito em 2026-09-24 — os 3 RPCs em `internal/grpcserver/server.go`, `NewServer` agora recebe `supplierRepo` como terceiro argumento (`main.go` atualizado). Fluxo create→list→deactivate→list adicionado no `TestCatalogServiceIntegration` existente. Achado no caminho: o assert antigo do `Product` (`require.Len(listResp.Products, 1)`) estava quebrado desde que a migration de seed (000003) foi criada — banco de teste nunca foi realmente vazio, tinha 5 produtos de seed + o criado no teste = 6, não 1. Corrigido pra checar por ID específico (`containsProductID`) em vez de contagem total, resistente a seed data. Bug pré-existente, não relacionado ao Supplier, só nunca tinha sido notado porque o teste não rodava de novo desde 2026-09-16)*
+- [x] Deploy: nova migration precisa rodar contra o banco já em produção (`catalog-db`), depois rebuild + rollout da imagem
+  *(feito em 2026-09-24 — migration `000004` aplicada contra `catalog-db` via port-forward, imagem rebuildada/pushada, `rollout restart` (sem `apply` na pasta, pra não repetir a cilada do secret do inventory). `CreateSupplier` confirmado via `grpcurl` contra o pod real, `active: true`)*
+
+*(reaberto de novo em 2026-09-24 — ainda no mesmo dia: pro `purchasing-service` validar `supplier_id`/`product_id` antes de lançar uma compra, precisa de `GetSupplier`/`GetProduct` por ID, que não existiam — só tinha `List`. Sem FK física entre bancos (ADR-0002), essa validação é responsabilidade da aplicação, não do banco.)*
+- [x] Adicionar `FindByID` em `ProductRepository`/`SupplierRepository` + RPCs `GetProduct`/`GetSupplier` no `catalog.proto`, implementados com `codes.NotFound` (não erro genérico — adiantando o padrão que a Fase 5 já exige)
+  *(feito em 2026-09-24 — testado no `TestCatalogServiceIntegration`: caso feliz (acha e confere os dados) + caso `NotFound` (UUID aleatório) pros dois. `buf lint` limpo)*
+- [x] Redeploy do catalog-service com o `GetProduct`/`GetSupplier` novos (mesmo fluxo: rebuild + push + rollout restart, sem migration dessa vez — não mudou schema)
+  *(feito em 2026-09-24 — `GetSupplier` confirmado via `grpcurl` contra o pod real: `NotFound` pra ID inválido, dados certos pro ID real)*
+
 ### inventory-service
 - [x] Clonar template pra `inventory-service`
   *(feito em 2026-09-17 — mesmo processo do catalog-service: `cp -r` + módulo renomeado via `sed` em todos os `.go`, proto de exemplo removido, build/vet/test limpos)*
@@ -221,18 +239,25 @@ Convenções:
   *(migrations/000001_create_lots_table e 000002_create_stock_movements_table, aplicadas e revertidas contra Postgres real, nessa ordem por causa da FK. `LotRepository` (Create/FindByID) e `StockMovementRepository` (Create/ListByLot))*
 - [x] Implementar RPCs com a validação de lote obrigatório
   *(feito em 2026-09-17 — os 4 RPCs (`CreateLot`, `RegisterMovement`, `GetStockByProduct`, `GetLotDetails`) em `internal/grpcserver/server.go`, registrados no `main.go`. Decisão de design: `quantity_kg` da movimentação é **assinado** (positivo entrada, negativo saída/ajuste-pra-baixo) — saldo é soma direta, `type` fica só como metadado descritivo, não determina o sinal. Testado de ponta a ponta via grpcurl contra Postgres real: CreateLot → 2 movimentações → saldo 700 (1000-300) certo em `GetLotDetails` e `GetStockByProduct`)*
-- [ ] Testes unitários da regra "sem lote não existe estoque" (caso de erro esperado)
-- [ ] Testes de consulta de saldo de estoque agregado por produto (soma de lotes)
-- [ ] Deploy no k8s + validação de métricas/traces
+- [x] Testes unitários da regra "sem lote não existe estoque" (caso de erro esperado)
+  *(feito em 2026-09-23 — `internal/grpcserver/inventory_test.go`, `TestRegisterMovement_SemLoteFalha`, mesmo padrão do catalog-service: testcontainers + Postgres real + migrations aplicadas de verdade. Confirma que `RegisterMovement` com `lot_id` inexistente devolve `codes.NotFound`, não erro genérico)*
+- [x] Testes de consulta de saldo de estoque agregado por produto (soma de lotes)
+  *(feito em 2026-09-23 — `TestGetStockByProduct_SomaVariosLotes`: 2 lotes do mesmo produto, movimentações em cada um, confirma que `GetStockByProduct` soma através dos lotes (1000 - 300 + 500 = 1200), não só dentro de um lote)*
+- [x] Deploy no k8s + validação de métricas/traces
+  *(feito em 2026-09-23 — `deploy/inventory-db/` e `deploy/inventory-service/` copiados de `catalog-db`/`catalog-service` via `cp`+`sed`, NodePort de métricas `30082`. Achado no caminho: `kubectl apply -f deploy/inventory-service/` aplica a pasta inteira, inclusive o `secret.yaml` (que é só molde de exemplo com senha `SENHA`) — isso sobrescreveu o Secret real criado na mão e quebrou a conexão com o banco (`password authentication failed`). Corrigido recriando o secret e documentado o aviso em `docs/deploy.md` (aplicar arquivos específicos, nunca a pasta inteira, quando o secret real já existe). Pod `Running` 1/1, `/healthz` OK, job `inventory-service` adicionado no `prometheus.yml` do servidor (`172.18.0.1:30082`) e confirmado `UP` em `/targets`)*
 
 ### purchasing-service
 *(atualizado em 2026-08-24 — sem "pedido de compra" como entidade separada, ver RF-PUR-1 em `docs/requisitos.md`: compra é lançada num único passo)*
-- [ ] Clonar template pra `purchasing-service`
-- [ ] Modelar entidade `Purchase` (compra — fornecedor, produto/quantidade/unidade, dados da nota fiscal de entrada, tudo lançado de uma vez)
-- [ ] Escrever proto `purchasing.proto` (RPC: CreatePurchase)
-- [ ] Migrations + modelos GORM (purchases)
-- [ ] Implementar lógica de lançamento: ao registrar uma `Purchase`, chamar (via gRPC síncrono, por enquanto) o inventory-service pra **criar o lote correspondente** antes de confirmar a compra
-- [ ] Testes unitários e de integração do fluxo compra lançada → lote criado no inventory
+*(corrigido em 2026-09-24 — a descrição abaixo estava simplificada demais: RF-PUR-1/RN1 é "fornecedor + **um ou mais** produtos", não um produto só. `docs/modelo-dados.md` já desenhava isso como duas entidades desde a Fase 1 — `Purchase` (cabeçalho) 1:N `PurchaseItem` (linha por produto) — e o `inventory-service.Lot.PurchaseItemID` já pressupõe isso. Fornecedor agora existe de verdade: `Supplier` no catalog-service, feito hoje)*
+- [x] Clonar template pra `purchasing-service`
+  *(feito em 2026-09-24 — `cp -r` + módulo renomeado via `sed` em todos os `.go`, proto/pb de exemplo removidos, build/vet limpos. Achado no caminho: o `sed` do módulo (`mtv-erp/service-template` → `mtv-erp/purchasing-service`) não pega strings soltas sem o prefixo `mtv-erp/` — sobraram duas em `main.go` (`InitTracer(ctx, "service-template")` e o `slog.Info` de startup) que não são erro de compilação, só ficariam com o nome errado no Jaeger/logs. Corrigido na mão. Vale conferir isso da próxima vez que clonar o template também)*
+- [ ] Modelar entidade `Purchase` (cabeçalho da compra — `id`, `supplier_id` (ref lógica pro `Supplier` do catalog-service), `invoice_number`, `invoice_date`, `invoice_value`)
+- [ ] Modelar entidade `PurchaseItem` (linha da compra — `id`, `purchase_id` (FK física, mesmo banco), `product_id`/`unit_id` (ref lógica pro catalog-service), `quantity`), FK física `purchase_id → purchases(id)`
+- [ ] Constraint de unicidade `(supplier_id, invoice_number)` — RF-PUR-1/RN6, bloqueia lançar a mesma nota fiscal duas vezes
+- [ ] Escrever proto `purchasing.proto` (RPC: `CreatePurchase`, recebendo fornecedor + nota fiscal + lista de itens de uma vez)
+- [ ] Migrations + modelos GORM (purchases, purchase_items)
+- [ ] Implementar lógica de lançamento: `CreatePurchase` grava `Purchase` + `PurchaseItem`s, converte cada item pra kg (RN4 — chama `ConvertToKg` do catalog-service) e chama (via gRPC síncrono, por enquanto) o inventory-service `CreateLot` **uma vez por item**, antes de confirmar a compra
+- [ ] Testes unitários e de integração do fluxo compra lançada → lote(s) criado(s) no inventory (cobrir caso de múltiplos itens numa mesma compra)
 - [ ] Deploy no k8s + validação de métricas/traces
 
 ---
@@ -240,11 +265,18 @@ Convenções:
 ## 🌐 Fase 5 — API Gateway + Frontend
 
 ### api-gateway (BFF REST)
-- [ ] Clonar template pra `api-gateway` (adaptado: expõe REST, não gRPC, pro mundo externo)
-- [ ] Definir rotas REST do gateway mapeando pros RPCs dos 4 serviços (auth, catalog, inventory, purchasing)
-- [ ] Implementar tradução REST → gRPC (handlers HTTP chamando clients gRPC internos)
+*(planejamento alinhado em 2026-09-23 com a checklist da disciplina — Aulas 1 e 2, APIs REST em Go. A arquitetura em camadas `handler→service→repository` da aula não se aplica 1:1 aqui: pelo ADR-0001 o gateway não tem lógica de negócio nem banco próprio, então vira `handler REST → client gRPC` direto, sem camada de service/repository — divergência intencional, não omissão.)*
+- [ ] Clonar template pra `api-gateway`, mas reescrever o essencial: trocar `grpc.NewServer` (servidor principal do template) por um servidor `net/http` com `go-chi/chi/v5` como router — recomendação da disciplina, 100% compatível com `http.Handler` (ao contrário de gin/echo, que têm API própria; gorilla/mux tem manutenção reduzida). `internal/grpcserver/` e `internal/db/` do template não se aplicam ao gateway
+- [ ] Adicionar `github.com/go-chi/chi/v5` ao `go.mod`; montar `chi.NewRouter()` na raiz com middlewares globais via `r.Use`: `middleware.Logger`, `middleware.Recoverer`, `middleware.RequestID`, `middleware.Timeout`, `middleware.AllowContentType`
+- [ ] Versionar a API com `r.Mount("/api/v1", subRouter)` — faltava no planejamento original, a disciplina exige prefixo de versão
+- [ ] Definir rotas REST do gateway mapeando pros RPCs dos 4 serviços (auth, catalog, inventory, purchasing), agrupadas por recurso com `r.Route("/produtos", ...)` + sub-grupo `/{id}`; parâmetros de rota via `chi.URLParam(r, "id")`, query params via `r.URL.Query().Get()`
+  📚 Estudar: tradução verbo-RPC → substantivo-REST — RPCs como `CreateProduct`/`ListProducts`/`DeactivateProduct` não viram rota 1:1 por nome; ex: `DeactivateProduct` vira `PATCH /produtos/{id}`, não uma rota própria. URIs sempre substantivo no plural, sem verbo (`GET /produtos`, nunca `/getProdutos`)
+- [ ] Implementar tradução REST → gRPC (handlers HTTP chamando clients gRPC internos direto, sem camada de service/repository intermediária — ver nota acima)
   📚 Estudar: padrão BFF (Backend For Frontend) — por que o gateway não deveria ter lógica de negócio própria
-- [ ] Implementar middleware de autenticação no gateway (valida JWT via chamada ao auth-service)
+- [ ] **Pré-requisito, adiantado da Fase 7 (2026-09-23):** revisar auth/catalog/inventory/purchasing e garantir que cada erro de negócio devolve `status.Error(codes.X, ...)` com o código certo (`NotFound`, `InvalidArgument`, `AlreadyExists`, `FailedPrecondition`), não só `return nil, err` cru — sem isso o gateway não tem o que traduzir e todo erro de negócio vira 500 genérico no REST
+- [ ] Implementar tradução de status gRPC → HTTP com helper padronizado `writeError(w, status, msg)` retornando `{"error": "..."}` (nunca `http.Error` texto puro): `NotFound`→404, `InvalidArgument`→400, `FailedPrecondition`/`AlreadyExists`→409/422, erro inesperado→500 sempre logado
+- [ ] Definir DTOs REST próprios (structs com `json:"campo"` + `omitempty`) em vez de serializar direto as structs geradas do protobuf; listas vazias retornam `[]` (`make([]T, 0, n)`), nunca `null`
+- [ ] Implementar middleware de autenticação no gateway (valida JWT via chamada ao auth-service), no formato `func(http.Handler) http.Handler`, registrado só nas rotas que exigem login (não no router raiz)
 - [ ] Gerar documentação OpenAPI/Swagger das rotas do gateway
 - [ ] Deploy do gateway no k8s + Ingress configurado
 
@@ -290,7 +322,7 @@ Convenções:
 ## ✅ Fase 7 — Testes end-to-end e polimento
 
 - [ ] Escrever teste E2E do fluxo completo: login → cadastro de produto → criação de pedido de compra → recebimento → evento assíncrono → lote criado → consulta de estoque
-- [ ] Revisar tratamento de erros em todos os serviços (mensagens de erro consistentes, códigos gRPC apropriados)
+- [ ] Revisar mensagens de erro consistentes em todos os serviços (texto, não código — o código gRPC apropriado já foi adiantado pra Fase 5, é pré-requisito do gateway)
   📚 Estudar: gRPC status codes — quando usar `InvalidArgument` vs `FailedPrecondition` vs `NotFound`
 - [ ] Revisar logs estruturados de todos os serviços (padronizar campos: `service`, `trace_id`, `level`)
 - [ ] Criar dashboard Grafana consolidado do MVP (requests/s, latência, taxa de erro por serviço)
