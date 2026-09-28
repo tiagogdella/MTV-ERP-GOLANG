@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: purchasing-service-config
+  namespace: mtv-erp
+data:
+  ENVIRONMENT: "production"
+  PORT: "8080"
+  GRPC_PORT: "9090"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://192.168.1.44:4317"
+  CATALOG_SERVICE_ADDR: "catalog-service:9090"
+  INVENTORY_SERVICE_ADDR: "inventory-service:9090"
