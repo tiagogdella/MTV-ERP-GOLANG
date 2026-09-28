@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package purchasing.v1;
+
+option go_package = "mtv-erp/purchasing-service/internal/pb/purchasing/v1;purchasingv1";
+
+message PurchaseItemInput {
+  string product_id = 1;
+  string unit_id = 2;
+  string safra = 3;
+  string quantity = 4;
+}
+
+message PurchaseItem {
+  string id = 1;
+  string product_id = 2;
+  string unit_id = 3;
+  string safra = 4;
+  string quantity = 5;
+  string lot_id = 6;
+}
+
+message Purchase {
+  string id = 1;
+  string supplier_id = 2;
+  string invoice_number = 3;
+  string invoice_date = 4;
+  string invoice_value = 5;
+  repeated PurchaseItem items = 6;
+}
+
+message CreatePurchaseRequest {
+  string supplier_id = 1;
+  string invoice_number = 2;
+  string invoice_date = 3;
+  string invoice_value = 4;
+  repeated PurchaseItemInput items = 5;
+}
+
+message CreatePurchaseResponse {
+  Purchase purchase = 1;
+}
+
+service PurchasingService {
+  rpc CreatePurchase(CreatePurchaseRequest) returns (CreatePurchaseResponse);
+}

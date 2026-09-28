@@ -20,5 +20,6 @@ type PurchaseItem struct {
 	PurchaseID string          `gorm:"not null"`
 	ProductID  string          `gorm:"not null"`
 	UnitID     string          `gorm:"not null"`
+	Safra	   string          `gorm:"not null"`
 	Quantity   decimal.Decimal `gorm:"type:numeric(12,4);not null"`
 }

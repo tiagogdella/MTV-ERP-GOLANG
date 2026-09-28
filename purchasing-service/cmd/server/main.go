@@ -21,6 +21,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	catalogv1 "mtv-erp/purchasing-service/internal/pb/catalog/v1"
 	inventoryv1 "mtv-erp/purchasing-service/internal/pb/inventory/v1"
+	purchasingv1 "mtv-erp/purchasing-service/internal/pb/purchasing/v1"
+	"mtv-erp/purchasing-service/internal/service"
+	"mtv-erp/purchasing-service/internal/grpcserver"
 )
 
 func main() {
@@ -50,9 +53,6 @@ func main() {
 
 	slog.Info("Conectado ao banco de dados")
 	
-	_ = database // temporário, até o repository do Purchase existir
-
-	
 	//Abrindo conexão com Catalog
 	catalogConn, err := grpc.NewClient(cfg.CatalogServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -71,8 +71,8 @@ func main() {
 	defer inventoryConn.Close()
 	inventoryClient := inventoryv1.NewInventoryServiceClient(inventoryConn)
 
-	_ = catalogClient
-	_ = inventoryClient
+	purchaseRepo := db.NewPurchaseRepository(database)
+	purchaseService := service.NewPurchaseService(purchaseRepo, catalogClient, inventoryClient)
 
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
@@ -81,6 +81,8 @@ func main() {
 			interceptors.Logging(),
 		),
 	)
+
+	purchasingv1.RegisterPurchasingServiceServer(grpcServer, grpcserver.NewServer(purchaseService))
 
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()

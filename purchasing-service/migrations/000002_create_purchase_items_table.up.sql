@@ -3,5 +3,6 @@ CREATE TABLE purchase_items (
     purchase_id UUID NOT NULL REFERENCES purchases(id),
     product_id UUID NOT NULL,
     unit_id UUID NOT NULL,
+    safra TEXT NOT NULL,
     quantity NUMERIC(12,4) NOT NULL
 );
