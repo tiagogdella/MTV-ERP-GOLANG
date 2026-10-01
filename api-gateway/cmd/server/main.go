@@ -61,6 +61,9 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/products", func(r chi.Router) {
 			r.Get("/", handlers.HandleListProducts(catalogClient))
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", handlers.HandleGetProduct(catalogClient))
+			})
 		})
 	})
 

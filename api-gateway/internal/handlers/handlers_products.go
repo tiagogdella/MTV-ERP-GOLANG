@@ -28,3 +28,23 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 		json.WriteJSON(w, http.StatusOK, products)
 	}
 }
+
+func HandleGetProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := json.ParseId(r)
+
+		resp, err := catalogClient.GetProduct(r.Context(), &catalogv1.GetProductRequest{Id:id})
+		if err != nil {
+			json.WriteGRPCError(w, err)
+			return
+		}
+
+		product := models.Product{
+			ID: resp.Product.Id,
+			Name: resp.Product.Name,
+			Active: resp.Product.Active,
+		}
+
+		json.WriteJSON(w, http.StatusOK, product)
+	}
+}
