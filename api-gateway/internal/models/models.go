@@ -5,3 +5,7 @@ type Product struct {
 	Name  string `json:"name"`
 	Active bool   `json:"active"`
 }
+
+type ProductInput struct {
+	Name string `json:"name"`
+}
