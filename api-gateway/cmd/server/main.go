@@ -64,6 +64,7 @@ func main() {
 			r.Post("/", handlers.HandleCreateProduct(catalogClient))
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", handlers.HandleGetProduct(catalogClient))
+				r.Patch("/", handlers.HandleDeactivateProduct(catalogClient))
 			})
 		})
 	})

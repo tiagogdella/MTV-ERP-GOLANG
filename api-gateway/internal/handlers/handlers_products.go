@@ -81,10 +81,58 @@ func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.Hand
 	}
 }
 
+func HandleDeactivateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := json.ParseId(r)
+
+		var in models.ProductPatchInput
+		if err := json.DecodeJSON(r, &in); err != nil {
+			json.WriteError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
+			return
+		}
+
+		if msg, ok := validateProductPatchInput(in); !ok {
+			json.WriteError(w, http.StatusUnprocessableEntity, msg)
+			return
+		}
+
+		_, err := catalogClient.DeactivateProduct(r.Context(), &catalogv1.DeactivateProductRequest{Id: id})
+		if err != nil {
+			json.WriteGRPCError(w, err)
+			return
+		}
+
+		resp, err := catalogClient.GetProduct(r.Context(), &catalogv1.GetProductRequest{Id: id})
+		if err != nil {
+			json.WriteGRPCError(w, err)
+			return
+		}
+
+		product := models.Product{
+			ID:     resp.Product.Id,
+			Name:   resp.Product.Name,
+			Active: resp.Product.Active,
+		}
+
+		json.WriteJSON(w, http.StatusOK, product)
+	}
+}
+
 func validateProductInput(in models.ProductInput) (msg string, ok bool) {
 	name := strings.TrimSpace(in.Name)
 	if name == "" {
-		return "o campo 'name' é obrigatório", false
+		return "O campo 'name' é obrigatório", false
 	}
+	return "", true
+}
+
+func validateProductPatchInput(in models.ProductPatchInput) (msg string, ok bool) {
+	if in.Active == nil {
+		return "O campo 'active' é obrigatório", false
+	}
+	if *in.Active {
+		return "Só é possível desativar um produto (active: false)", false
+	}
+
 	return "", true
 }
