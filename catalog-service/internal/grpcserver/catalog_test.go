@@ -87,6 +87,10 @@ func TestCatalogServiceIntegration(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, codes.NotFound, status.Code(err))
 
+	_, err = server.DeactivateProduct(ctx, &catalogv1.DeactivateProductRequest{Id: uuid.NewString()})
+	require.Error(t, err)
+	assert.Equal(t, codes.NotFound, status.Code(err))
+	
 	listResp2, err := server.ListProducts(ctx, &catalogv1.ListProductsRequest{})
 	require.NoError(t, err)
 	assert.False(t, containsProductID(listResp2.Products, createProductResp.Product.Id))

@@ -32,5 +32,13 @@ func (r *ProductRepository) ListActive() ([]Product, error) {
 }
 
 func (r *ProductRepository) Deactivate(id string) error {
-	return r.db.Model(&Product{}).Where("id = ?", id).Update("active", false).Error
+	result := r.db.Model(&Product{}).Where("id = ?", id).Update("active", false)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

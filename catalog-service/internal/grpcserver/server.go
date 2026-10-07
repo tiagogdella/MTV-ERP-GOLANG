@@ -2,10 +2,12 @@ package grpcserver
 
 import (
 	"context"
+	"errors"
 
 	"mtv-erp/catalog-service/internal/db"
 	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
 	"github.com/shopspring/decimal"
+	"gorm.io/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -61,6 +63,9 @@ func (s *Server) ListProducts(ctx context.Context, req *catalogv1.ListProductsRe
 
 func (s *Server) DeactivateProduct(ctx context.Context, req *catalogv1.DeactivateProductRequest) (*catalogv1.DeactivateProductResponse, error) {
 	if err := s.productRepo.Deactivate(req.Id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound){
+			return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
+		}
 		return nil, err
 	}
 
