@@ -32,5 +32,13 @@ func (r *SupplierRepository) ListActive() ([]Supplier, error) {
 }
 
 func (r *SupplierRepository) Deactivate(id string) error {
-	return r.db.Model(&Supplier{}).Where("id = ?", id).Update("active", false).Error
+	result := r.db.Model(&Supplier{}).Where("id = ?", id).Update("active", false)
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

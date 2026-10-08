@@ -198,6 +198,9 @@ func (s *Server) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliers
 
 func (s *Server) DeactivateSupplier(ctx context.Context, req *catalogv1.DeactivateSupplierRequest) (*catalogv1.DeactivateSupplierResponse, error) {
 	if err := s.supplierRepo.Deactivate(req.Id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
+		}
 		return nil, err
 	}
 
