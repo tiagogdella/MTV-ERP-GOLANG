@@ -67,6 +67,15 @@ func main() {
 				r.Patch("/", handlers.HandleDeactivateProduct(catalogClient))
 			})
 		})
+		r.Route("/suppliers", func(r chi.Router) {
+			r.Get("/", handlers.HandleListSuppliers(catalogClient))
+			r.Post("/", handlers.HandleCreateSupplier(catalogClient))
+			r.Route("/{id}", func(r chi.Router) {
+				r.Get("/", handlers.HandleGetSupplier(catalogClient))
+				r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
+			})
+		})
+
 	})
 
 	slog.Info("service iniciado", "service", "api-gateway", "env", cfg.Environment, "port", cfg.Port)
