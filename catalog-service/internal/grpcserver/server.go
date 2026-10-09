@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/google/uuid"
 )
 
 type Server struct {
@@ -62,6 +63,10 @@ func (s *Server) ListProducts(ctx context.Context, req *catalogv1.ListProductsRe
 }
 
 func (s *Server) DeactivateProduct(ctx context.Context, req *catalogv1.DeactivateProductRequest) (*catalogv1.DeactivateProductResponse, error) {
+	if err := validateID(req.Id); err != nil {
+		return nil, err
+	}
+	
 	if err := s.productRepo.Deactivate(req.Id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound){
 			return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
@@ -197,6 +202,10 @@ func (s *Server) ListSuppliers(ctx context.Context, req *catalogv1.ListSuppliers
 }
 
 func (s *Server) DeactivateSupplier(ctx context.Context, req *catalogv1.DeactivateSupplierRequest) (*catalogv1.DeactivateSupplierResponse, error) {
+	if err := validateID(req.Id); err != nil {
+		return nil, err
+	}
+
 	if err := s.supplierRepo.Deactivate(req.Id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
@@ -208,6 +217,10 @@ func (s *Server) DeactivateSupplier(ctx context.Context, req *catalogv1.Deactiva
 }
 
 func (s *Server) GetProduct(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.GetProductResponse, error) {
+	if err := validateID(req.Id); err != nil {
+		return nil, err
+	}
+
 	product, err := s.productRepo.FindByID(req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
@@ -223,6 +236,10 @@ func (s *Server) GetProduct(ctx context.Context, req *catalogv1.GetProductReques
 }
 
 func (s *Server) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequest) (*catalogv1.GetSupplierResponse, error) {
+	if err := validateID(req.Id); err != nil {
+		return nil, err
+	}
+
 	supplier, err := s.supplierRepo.FindByID(req.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
@@ -237,4 +254,11 @@ func (s *Server) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequ
 			Active:   supplier.Active,
 		},
 	}, nil
+}
+
+func validateID(id string) error {
+	if _, err := uuid.Parse(id); err != nil {
+		return status.Errorf(codes.InvalidArgument, "id %q não é um UUID válido", id)
+	}
+	return nil
 }

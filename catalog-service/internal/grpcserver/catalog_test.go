@@ -128,6 +128,17 @@ func TestCatalogServiceIntegration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, listSuppliersResp2.Suppliers, 0)
 
+	_, err = server.GetProduct(ctx, &catalogv1.GetProductRequest{Id: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.DeactivateProduct(ctx, &catalogv1.DeactivateProductRequest{Id: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.GetSupplier(ctx, &catalogv1.GetSupplierRequest{Id: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.DeactivateSupplier(ctx, &catalogv1.DeactivateSupplierRequest{Id: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
 }
 
 func containsProductID(products []*catalogv1.Product, id string) bool {
