@@ -5,14 +5,19 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func ParseId(r *http.Request) string {
-	return chi.URLParam(r, "id")
+func ParseId(r *http.Request) (string, error) {
+	id := chi.URLParam(r, "id")
+	if _, err := uuid.Parse(id); err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 func WriteJSON(w http.ResponseWriter, status int, v any) {

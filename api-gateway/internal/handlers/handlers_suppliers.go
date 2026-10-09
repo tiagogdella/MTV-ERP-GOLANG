@@ -38,7 +38,12 @@ func HandleListSuppliers(catalogClient catalogv1.CatalogServiceClient) http.Hand
 
 func HandleGetSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := json.ParseId(r)
+		id, err := json.ParseId(r)
+		if err != nil {
+			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
+			return
+		}
+
 
 		resp, err := catalogClient.GetSupplier(r.Context(), &catalogv1.GetSupplierRequest{Id: id})
 		if err != nil {
@@ -79,7 +84,12 @@ func HandleCreateSupplier(catalogClient catalogv1.CatalogServiceClient) http.Han
 
 func HandleDeactivateSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := json.ParseId(r)
+		id, err := json.ParseId(r)
+		if err != nil {
+			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
+			return
+		}
+
 
 		var in models.SupplierPatchInput
 		if err := json.DecodeJSON(r, &in); err != nil {
@@ -92,7 +102,7 @@ func HandleDeactivateSupplier(catalogClient catalogv1.CatalogServiceClient) http
 			return
 		}
 
-		_, err := catalogClient.DeactivateSupplier(r.Context(), &catalogv1.DeactivateSupplierRequest{Id: id})
+		_, err = catalogClient.DeactivateSupplier(r.Context(), &catalogv1.DeactivateSupplierRequest{Id: id})
 		if err != nil {
 			json.WriteGRPCError(w, err)
 			return

@@ -32,7 +32,12 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 
 func HandleGetProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := json.ParseId(r)
+		id, err := json.ParseId(r)
+		if err != nil {
+			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
+			return
+		}
+
 
 		resp, err := catalogClient.GetProduct(r.Context(), &catalogv1.GetProductRequest{Id:id})
 		if err != nil {
@@ -83,7 +88,12 @@ func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.Hand
 
 func HandleDeactivateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := json.ParseId(r)
+		id, err := json.ParseId(r)
+		if err != nil {
+			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
+			return
+		}
+
 
 		var in models.ProductPatchInput
 		if err := json.DecodeJSON(r, &in); err != nil {
@@ -96,7 +106,7 @@ func HandleDeactivateProduct(catalogClient catalogv1.CatalogServiceClient) http.
 			return
 		}
 
-		_, err := catalogClient.DeactivateProduct(r.Context(), &catalogv1.DeactivateProductRequest{Id: id})
+		_, err = catalogClient.DeactivateProduct(r.Context(), &catalogv1.DeactivateProductRequest{Id: id})
 		if err != nil {
 			json.WriteGRPCError(w, err)
 			return
