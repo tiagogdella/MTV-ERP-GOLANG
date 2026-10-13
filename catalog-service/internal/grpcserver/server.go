@@ -223,8 +223,12 @@ func (s *Server) GetProduct(ctx context.Context, req *catalogv1.GetProductReques
 
 	product, err := s.productRepo.FindByID(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "erro ao buscar produto: %v", err)
 	}
+
 
 	return &catalogv1.GetProductResponse{
 		Product: &catalogv1.Product{
@@ -242,8 +246,12 @@ func (s *Server) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequ
 
 	supplier, err := s.supplierRepo.FindByID(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "fornecedor %q não encontrado", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "erro ao buscar fornecedor: %v", err)
 	}
+
 
 	return &catalogv1.GetSupplierResponse{
 		Supplier: &catalogv1.Supplier{
