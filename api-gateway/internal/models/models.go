@@ -31,3 +31,11 @@ type SupplierInput struct {
 type SupplierPatchInput struct {
 	Active *bool `json:"active"`
 }
+
+type Address struct {
+	CEP          string `json:"cep"`
+	Street       string `json:"street"`
+	Neighborhood string `json:"neighborhood"`
+	City         string `json:"city"`
+	State        string `json:"state"`
+}

@@ -9,6 +9,7 @@ type Config struct {
 	Port 				string
 	Environment 		string
 	CatalogServiceAddr 	string
+	ViaCEPBaseURL 		string
 }
 
 func Load() (Config, error) {
@@ -16,6 +17,7 @@ func Load() (Config, error) {
 		Port: 				getEnv("PORT", "8080"),
 		Environment: 		getEnv("ENVIRONMENT", "local"),
 		CatalogServiceAddr: getEnv("CATALOG_SERVICE_ADDR", ""),
+		ViaCEPBaseURL: 		getEnv("VIACEP_BASE_URL", "https://viacep.com.br"),	
 	}
 
 	if err := cfg.validate(); err != nil{

@@ -13,7 +13,7 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := catalogClient.ListProducts(r.Context(), &catalogv1.ListProductsRequest{})
 		if err != nil {
-			json.WriteError(w, http.StatusInternalServerError, "erro ao consultar produtos")
+			json.WriteGRPCError(w, err)
 			return
 		}
 

@@ -18,6 +18,7 @@ import (
 	"mtv-erp/api-gateway/internal/observability"
 	"mtv-erp/api-gateway/internal/handlers"
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
+	"mtv-erp/api-gateway/internal/clients/viacep"
 )
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 	}
 	defer catalogConn.Close()
 	catalogClient := catalogv1.NewCatalogServiceClient(catalogConn)
+	viacepClient := viacep.NewClient(cfg.ViaCEPBaseURL, 5*time.Second)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -75,7 +77,7 @@ func main() {
 				r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
 			})
 		})
-
+		r.Get("/addresses/{cep}", handlers.HandleGetAddress(viacepClient))
 	})
 
 	slog.Info("service iniciado", "service", "api-gateway", "env", cfg.Environment, "port", cfg.Port)

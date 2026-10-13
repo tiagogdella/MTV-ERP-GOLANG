@@ -8,3 +8,4 @@ data:
   PORT: "8080"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://192.168.1.44:4317"
   CATALOG_SERVICE_ADDR: "catalog-service:9090"
+  VIACEP_BASE_URL: "https://viacep.com.br"
