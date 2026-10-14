@@ -13,38 +13,28 @@ Arquivos citados por **nome de função**, não por linha (as linhas mudam com o
 
 ## Antes de começar (10 min antes)
 
-Abrir 4 terminais. ⚠️ Ainda não testado no Mac: validar no ensaio.
+Validado no Mac em 14/10 (Go 1.27, Docker 29.6.1). Tudo pelo `Makefile` da **raiz**. Abrir o Docker Desktop antes.
 
-**Terminal 1, Postgres** (qualquer pasta):
-```
-docker start catalog-db-local
-```
-Na primeira vez, em vez de `start`, criar o container:
-```
-docker run -d --name catalog-db-local -e POSTGRES_USER=catalog -e POSTGRES_PASSWORD=catalog -e POSTGRES_DB=catalog -p 5432:5432 postgres:16
-```
-E rodar as migrations (na raiz do projeto, só na primeira vez):
-```
-migrate -path catalog-service/migrations -database "postgres://catalog:catalog@localhost:5432/catalog?sslmode=disable" up
-```
-Se a 5432 estiver ocupada (Postgres.app), use `-p 5433:5432` e troque a porta nas URLs.
+| Terminal | Comando (na raiz) | Papel |
+|---|---|---|
+| 1 | `make db` | liga o Postgres (container já existe, tabelas já criadas) |
+| 2 | `make catalog` | catalog-service (gRPC 9090). **É o do Ctrl+C** |
+| 3 | `make gateway` | api-gateway (8080). **Deixar visível: mostra o ERROR do 503** |
+| 4 | `curl` / `make test` | onde você digita na demo |
 
-**Terminal 2, catalog-service** (dentro de `catalog-service/`):
-```
-DATABASE_URL="postgres://catalog:catalog@localhost:5432/catalog?sslmode=disable" PORT=8081 GRPC_PORT=9090 go run ./cmd/server
-```
-
-**Terminal 3, api-gateway** (dentro de `api-gateway/`):
-```
-CATALOG_SERVICE_ADDR=localhost:9090 go run ./cmd/server
-```
-
-**Terminal 4, curl e testes** (dentro de `api-gateway/`). Aquecimento:
+Aquecimento (terminal 4):
 ```
 curl -i localhost:8080/api/v1/products
 ```
+→ 200 com os produtos do seed.
 
-VS Code: fonte grande, árvore de `api-gateway/` aberta.
+Se o banco vier vazio ou der erro de tabela: `make migrate`. Se o container sumiu, recriar:
+```
+docker run -d --name catalog-db-local -e POSTGRES_USER=catalog -e POSTGRES_PASSWORD=catalog -e POSTGRES_DB=catalog -p 5432:5432 postgres:16
+```
+e depois `make migrate`.
+
+VS Code: fonte grande, árvore de `api-gateway/` aberta. Depois da apresentação: `make stop`.
 
 ---
 
@@ -112,7 +102,8 @@ curl -i localhost:8080/api/v1/addresses/01001-000
 curl -i localhost:8080/api/v1/products
 ```
 → **503**. O gateway continua de pé.
-Religar o catalog (seta pra cima + Enter no terminal 2).
+Apontar o **terminal 3**: `ERROR "serviço interno indisponível" ... connection refused`. > "Infra é logado, e o detalhe técnico fica só no log; o cliente recebe mensagem genérica."
+Religar com `make catalog` no terminal 2 e repetir o curl → **200**. > "O gateway reconecta sozinho."
 
 ## 6. Critério 5: qualidade (1 min)
 
@@ -122,9 +113,10 @@ Religar o catalog (seta pra cima + Enter no terminal 2).
 ## 7. Critério 6: testes (1 min)
 
 ```
-go test ./internal/handlers/ -v
+make test
 ```
-> "22 subtestes em tabela, com fakes. O `wantCalled` prova que 400 e 422 nem chamam o catalog. Os ERROR no log são esperados: são os casos de infra."
+(roda `go test ./internal/handlers/ -v` dentro de `api-gateway/`)
+> "O fake é um dublê do catalog: mesma interface, responde o que eu configurar. 22 subtestes em tabela, com fakes. O `wantCalled` prova que 400 e 422 nem chamam o catalog. Os ERROR no log são esperados: são os casos de infra."
 
 ## 8. Fechamento (30s)
 
