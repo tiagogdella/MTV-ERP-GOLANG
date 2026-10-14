@@ -12,7 +12,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func ParseId(r *http.Request) (string, error) {
+func ParseID(r *http.Request) (string, error) {
 	id := chi.URLParam(r, "id")
 	if _, err := uuid.Parse(id); err != nil {
 		return "", err

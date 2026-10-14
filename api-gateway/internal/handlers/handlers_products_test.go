@@ -15,7 +15,7 @@ import (
 
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 )
-
+// Item 6.1
 type fakeCatalogClient struct {
 	catalogv1.CatalogServiceClient
 	createCalled bool
@@ -39,7 +39,7 @@ func (f *fakeCatalogClient) GetProduct(ctx context.Context, in *catalogv1.GetPro
 }
 
 func TestHandleCreateProduct(t *testing.T) {
-	tests := []struct {
+	tests := []struct { // Teste em tabela
 		name       string
 		body       string
 		fake       *fakeCatalogClient
@@ -48,7 +48,7 @@ func TestHandleCreateProduct(t *testing.T) {
 	}{
 		{"cria produto", `{"name":"Arroz tipo 1"}`, &fakeCatalogClient{}, http.StatusCreated, true},
 		{"JSON quebrado", `{"name":`, &fakeCatalogClient{}, http.StatusBadRequest, false},
-		{"campo desconhecido", `{"name":"Arroz","id":"x"}`, &fakeCatalogClient{}, http.StatusBadRequest, false},
+		{"campo desconhecido", `{"name":"Arroz","id":"x"}`, &fakeCatalogClient{}, http.StatusBadRequest, false}, // Não aceita passar ID
 		{"nome vazio", `{"name":"   "}`, &fakeCatalogClient{}, http.StatusUnprocessableEntity, false},
 		{"catalog fora do ar", `{"name":"Arroz"}`, &fakeCatalogClient{createErr: status.Error(codes.Unavailable, "connection refused")}, http.StatusServiceUnavailable, true},
 	}
@@ -61,7 +61,7 @@ func TestHandleCreateProduct(t *testing.T) {
 			HandleCreateProduct(tt.fake).ServeHTTP(rec, req)
 
 			assert.Equal(t, tt.wantStatus, rec.Code)
-			assert.Equal(t, tt.wantCalled, tt.fake.createCalled)
+			assert.Equal(t, tt.wantCalled, tt.fake.createCalled) // Certifica que Catalog não foi chamado por causa do 400/422
 		})
 	}
 }
@@ -78,7 +78,7 @@ func TestHandleGetProduct(t *testing.T) {
 		{"produto encontrado", validID, &fakeCatalogClient{}, http.StatusOK},
 		{"id mal formado", "abc", &fakeCatalogClient{}, http.StatusBadRequest},
 		{"produto não existe (negócio)", validID, &fakeCatalogClient{getErr: status.Error(codes.NotFound, "produto não encontrado")}, http.StatusNotFound},
-		{"falha de banco no catalog (infra)", validID, &fakeCatalogClient{getErr: status.Error(codes.Internal, "conexão com banco caiu")}, http.StatusInternalServerError},
+		{"falha de banco no catalog (infra)", validID, &fakeCatalogClient{getErr: status.Error(codes.Internal, "conexão com banco caiu")}, http.StatusInternalServerError}, //Teste 2.3 banco caiu != não encontrado
 	}
 
 	for _, tt := range tests {

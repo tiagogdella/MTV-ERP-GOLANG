@@ -11,12 +11,11 @@ import (
 	"time"
 )
 
-//Criando erros
-var (
-	ErrInvalidCEP  = errors.New("CEP inválido")
-	ErrNotFound    = errors.New("CEP não encontrado")
-	ErrTimeout     = errors.New("ViaCEP não respondeu a tempo")
-	ErrUnavailable = errors.New("ViaCEP indisponível")
+var ( // Item 4.1
+	ErrInvalidCEP  = errors.New("CEP inválido")                 // Tipo: Negócio
+	ErrNotFound    = errors.New("CEP não encontrado")           // Tipo: Negócio
+	ErrTimeout     = errors.New("ViaCEP não respondeu a tempo") // Tipo: Infra
+	ErrUnavailable = errors.New("ViaCEP indisponível")          // Tipo: Infra
 )
 
 var cepFormat = regexp.MustCompile(`^[0-9]{8}$`)
@@ -43,12 +42,14 @@ func NewClient(baseURL string, timeout time.Duration) *Client {
 	}
 }
 
+// Item 3.1
 func (c *Client) Lookup(ctx context.Context, cep string) (*Address, error) {
 	cep = strings.ReplaceAll(cep, "-", "")
 	if !cepFormat.MatchString(cep) {
 		return nil, ErrInvalidCEP
 	}
 
+	//Timeout no Context
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 
@@ -65,8 +66,11 @@ func (c *Client) Lookup(ctx context.Context, cep string) (*Address, error) {
 		}
 		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
 	}
+
+	// Fechamento do Body da função
 	defer resp.Body.Close()
 
+	//Conferir status code
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, ErrInvalidCEP
 	}
@@ -78,6 +82,7 @@ func (c *Client) Lookup(ctx context.Context, cep string) (*Address, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&addr); err != nil {
 		return nil, fmt.Errorf("%w: resposta inválida: %v", ErrUnavailable, err)
 	}
+	// Conferir se CEP não está vazio porque retorna 200 mesmo com inexistente
 	if addr.CEP == "" {
 		return nil, ErrNotFound
 	}

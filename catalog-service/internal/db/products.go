@@ -31,14 +31,15 @@ func (r *ProductRepository) ListActive() ([]Product, error) {
 	return products, err
 }
 
+// Item 2.3 === Erro de não encontrado != falha de banco ===
 func (r *ProductRepository) Deactivate(id string) error {
 	result := r.db.Model(&Product{}).Where("id = ?", id).Update("active", false)
 
 	if result.Error != nil {
-		return result.Error
+		return result.Error // Falha banco
 	}
 	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
+		return gorm.ErrRecordNotFound // Não encontrado
 	}
 	return nil
 }

@@ -5,28 +5,30 @@ import (
 	"os"
 )
 
+// Struct
 type Config struct {
-	Port 				string
-	Environment 		string
-	CatalogServiceAddr 	string
-	ViaCEPBaseURL 		string
+	Port               string
+	Environment        string
+	CatalogServiceAddr string
+	ViaCEPBaseURL      string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Port: 				getEnv("PORT", "8080"),
-		Environment: 		getEnv("ENVIRONMENT", "local"),
-		CatalogServiceAddr: getEnv("CATALOG_SERVICE_ADDR", ""),
-		ViaCEPBaseURL: 		getEnv("VIACEP_BASE_URL", "https://viacep.com.br"),	
+		Port:               getEnv("PORT", "8080"),
+		Environment:        getEnv("ENVIRONMENT", "local"),
+		CatalogServiceAddr: getEnv("CATALOG_SERVICE_ADDR", ""), // Sem default
+		ViaCEPBaseURL:      getEnv("VIACEP_BASE_URL", "https://viacep.com.br"),
 	}
 
-	if err := cfg.validate(); err != nil{
+	if err := cfg.validate(); err != nil {
 		return Config{}, err
 	}
 
 	return cfg, nil
 }
 
+// Validação com fail-fast
 func (c Config) validate() error {
 	if c.Port == "" {
 		return fmt.Errorf("PORT não pode ser vazio")
@@ -37,6 +39,7 @@ func (c Config) validate() error {
 	return nil
 }
 
+// Lê a variável de ambiente
 func getEnv(key, fallback string) string {
 	value := os.Getenv(key)
 	if value == "" {

@@ -38,7 +38,7 @@ func HandleListSuppliers(catalogClient catalogv1.CatalogServiceClient) http.Hand
 
 func HandleGetSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := json.ParseId(r)
+		id, err := json.ParseID(r)
 		if err != nil {
 			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
 			return
@@ -84,7 +84,7 @@ func HandleCreateSupplier(catalogClient catalogv1.CatalogServiceClient) http.Han
 
 func HandleDeactivateSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := json.ParseId(r)
+		id, err := json.ParseID(r)
 		if err != nil {
 			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
 			return

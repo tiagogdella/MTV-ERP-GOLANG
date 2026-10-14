@@ -20,8 +20,8 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 		products := make([]models.Product, 0, len(resp.Products))
 		for _, p := range resp.Products {
 			products = append(products, models.Product{
-				ID: p.Id,
-				Name: p.Name,
+				ID:     p.Id,
+				Name:   p.Name,
 				Active: p.Active,
 			})
 		}
@@ -30,39 +30,44 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 	}
 }
 
+// Itens 3.2/3.3
 func HandleGetProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := json.ParseId(r)
+		id, err := json.ParseID(r)
+		// 400, o ID não é UUID.
 		if err != nil {
 			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
 			return
 		}
 
-
-		resp, err := catalogClient.GetProduct(r.Context(), &catalogv1.GetProductRequest{Id:id})
+		resp, err := catalogClient.GetProduct(r.Context(), &catalogv1.GetProductRequest{Id: id})
 		if err != nil {
-			json.WriteGRPCError(w, err)
+			json.WriteGRPCError(w, err) // 404 se não existe, 500 se o banco falhou, 503 se o catalog está fora.
 			return
 		}
 
 		product := models.Product{
-			ID: resp.Product.Id,
-			Name: resp.Product.Name,
+			ID:     resp.Product.Id,
+			Name:   resp.Product.Name,
 			Active: resp.Product.Active,
 		}
 
+		// 200, StatusOK
 		json.WriteJSON(w, http.StatusOK, product)
 	}
 }
 
+// Itens 3.2/3.3
 func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.ProductInput
-		if err := json.DecodeJSON(r, &in); err != nil{
+		// 400, JSON mal formatado
+		if err := json.DecodeJSON(r, &in); err != nil {
 			json.WriteError(w, http.StatusBadRequest, "JSON inválido: "+err.Error())
 			return
 		}
 
+		// 422, regra de negocio violada
 		if msg, ok := validateProductInput(in); !ok {
 			json.WriteError(w, http.StatusUnprocessableEntity, msg)
 			return
@@ -77,23 +82,23 @@ func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.Hand
 		}
 
 		product := models.Product{
-			ID: resp.Product.Id,
-			Name: resp.Product.Name,
+			ID:     resp.Product.Id,
+			Name:   resp.Product.Name,
 			Active: resp.Product.Active,
 		}
 
+		// 201 Created
 		json.WriteJSON(w, http.StatusCreated, product)
 	}
 }
 
 func HandleDeactivateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := json.ParseId(r)
+		id, err := json.ParseID(r)
 		if err != nil {
 			json.WriteError(w, http.StatusBadRequest, "O 'id' informado não é um UUID válido")
 			return
 		}
-
 
 		var in models.ProductPatchInput
 		if err := json.DecodeJSON(r, &in); err != nil {

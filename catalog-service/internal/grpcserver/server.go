@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"mtv-erp/catalog-service/internal/db"
-	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"mtv-erp/catalog-service/internal/db"
+	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
 )
 
 type Server struct {
@@ -66,9 +66,9 @@ func (s *Server) DeactivateProduct(ctx context.Context, req *catalogv1.Deactivat
 	if err := validateID(req.Id); err != nil {
 		return nil, err
 	}
-	
+
 	if err := s.productRepo.Deactivate(req.Id); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound){
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
 		}
 		return nil, err
@@ -216,19 +216,20 @@ func (s *Server) DeactivateSupplier(ctx context.Context, req *catalogv1.Deactiva
 	return &catalogv1.DeactivateSupplierResponse{}, nil
 }
 
+// Item 2.3
 func (s *Server) GetProduct(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.GetProductResponse, error) {
 	if err := validateID(req.Id); err != nil {
-		return nil, err
+		return nil, err // Valida ID
 	}
 
 	product, err := s.productRepo.FindByID(req.Id)
 	if err != nil {
+		// Apenas o ErrRecordNotFound vira NotFound
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "produto %q não encontrado", req.Id)
 		}
 		return nil, status.Errorf(codes.Internal, "erro ao buscar produto: %v", err)
 	}
-
 
 	return &catalogv1.GetProductResponse{
 		Product: &catalogv1.Product{
@@ -251,7 +252,6 @@ func (s *Server) GetSupplier(ctx context.Context, req *catalogv1.GetSupplierRequ
 		}
 		return nil, status.Errorf(codes.Internal, "erro ao buscar fornecedor: %v", err)
 	}
-
 
 	return &catalogv1.GetSupplierResponse{
 		Supplier: &catalogv1.Supplier{
