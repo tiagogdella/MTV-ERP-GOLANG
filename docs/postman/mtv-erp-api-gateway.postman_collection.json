@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "MTV ERP - API Gateway",
+    "description": "Rotas HTTP do api-gateway. Rode o gateway (porta 8080 por padrão) antes de enviar. Os POSTs de criação salvam o id retornado em productId / supplierId automaticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "productId", "value": "" },
+    { "key": "supplierId", "value": "" },
+    { "key": "cep", "value": "88040900" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": { "method": "GET", "url": "{{baseUrl}}/healthz" }
+        },
+        {
+          "name": "Readiness",
+          "request": { "method": "GET", "url": "{{baseUrl}}/readyz" }
+        },
+        {
+          "name": "Metrics (Prometheus)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/metrics" }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Criar produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body.id) pm.collectionVariables.set('productId', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/products/",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Parafuso 3mm\"\n}" }
+          }
+        },
+        {
+          "name": "Listar produtos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/products/" }
+        },
+        {
+          "name": "Buscar produto por id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/products/{{productId}}/" }
+        },
+        {
+          "name": "Desativar produto",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/products/{{productId}}/",
+            "body": { "mode": "raw", "raw": "{\n  \"active\": false\n}" }
+          }
+        },
+        {
+          "name": "Erro: criar sem name (422)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/products/",
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"   \"\n}" }
+          }
+        },
+        {
+          "name": "Erro: id inválido (400)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/products/abc/" }
+        }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        {
+          "name": "Criar fornecedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body.id) pm.collectionVariables.set('supplierId', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/suppliers/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fornecedor Exemplo LTDA\",\n  \"document\": \"12345678000190\",\n  \"address\": \"Rua Exemplo, 100 - Florianópolis/SC\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar fornecedores",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/suppliers/" }
+        },
+        {
+          "name": "Buscar fornecedor por id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/suppliers/{{supplierId}}/" }
+        },
+        {
+          "name": "Desativar fornecedor",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/suppliers/{{supplierId}}/",
+            "body": { "mode": "raw", "raw": "{\n  \"active\": false\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Addresses (ViaCEP)",
+      "item": [
+        {
+          "name": "Buscar endereço por CEP",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/addresses/{{cep}}" }
+        }
+      ]
+    }
+  ]
+}

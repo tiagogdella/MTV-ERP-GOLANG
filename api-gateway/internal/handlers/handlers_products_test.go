@@ -16,9 +16,9 @@ import (
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 )
 // Item 6.1
-type fakeCatalogClient struct {
+type fakeCatalogClient struct { // Duble
 	catalogv1.CatalogServiceClient
-	createCalled bool
+	createCalled bool  //"Dedo duro" - marca True quando função chama
 	createErr    error
 	getErr       error
 }

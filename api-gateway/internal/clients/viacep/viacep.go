@@ -74,7 +74,7 @@ func (c *Client) Lookup(ctx context.Context, cep string) (*Address, error) {
 	if resp.StatusCode == http.StatusBadRequest {
 		return nil, ErrInvalidCEP
 	}
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK { // Qualquer coisa != 200 => indisponivel
 		return nil, fmt.Errorf("%w: status %d", ErrUnavailable, resp.StatusCode)
 	}
 

@@ -40,11 +40,11 @@ func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error("falha ao carregar configuração", "error", err)
-		os.Exit(1) // failfast
+		os.Exit(1) // fail-fast
 	}
 
 	// Clients
-	catalogConn, err := grpc.NewClient(
+	catalogConn, err := grpc.NewClient( // Conexão
 		cfg.CatalogServiceAddr, // Endereço
 		grpc.WithTransportCredentials(insecure.NewCredentials()), // Sem TLS/mTLS no momento
 	)
@@ -53,15 +53,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer catalogConn.Close()
-	catalogClient := catalogv1.NewCatalogServiceClient(catalogConn)
+	catalogClient := catalogv1.NewCatalogServiceClient(catalogConn) // Métodos
 	viacepClient := viacep.NewClient(cfg.ViaCEPBaseURL, 5*time.Second)
 
 	r := chi.NewRouter()
 	// Middlewares
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer) // (um panic vira 500 em vez de derrubar o processo)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Timeout(10 * time.Second))
+	r.Use(middleware.RequestID) // Cria um ID para Reqs
+	r.Use(middleware.Timeout(10 * time.Second)) // Timer
 	r.Use(middleware.AllowContentType("application/json")) // Filtra apenas JSON com 415
 
 	r.Get("/healthz", health.LivenessHandler)
