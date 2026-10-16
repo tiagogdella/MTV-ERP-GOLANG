@@ -114,5 +114,25 @@ func TestLoginIntegration(t *testing.T) {
 	if status.Code(err) != codes.Unauthenticated {
 		t.Errorf("e-mail inexistente: esperado Unauthenticated, veio %v", status.Code(err))
 	}
+
+	// E-mail repetido | TranslateError
+	_, err = server.CreateUser(ctx, &authpb.CreateUserRequest{
+		Email:    "integration@mtv.com.br",
+		Password: "outra-senha",
+		Role:     "operador",
+	})
+	if status.Code(err) != codes.AlreadyExists {
+		t.Errorf("e-mail repetido: esperado AlreadyExists, veio %v", status.Code(err))
+	}
+
+	// Papel inválido
+	_, err = server.CreateUser(ctx, &authpb.CreateUserRequest{
+		Email:    "novo@mtv.com.br",
+		Password: "senha123",
+		Role:     "gerente",
+	})
+	if status.Code(err) != codes.InvalidArgument {
+		t.Errorf("papel inválido: esperado InvalidArgument, veio %v", status.Code(err))
+	}
 }
 

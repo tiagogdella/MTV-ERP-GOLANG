@@ -24,19 +24,29 @@ func NewServer(repo *db.UserRepository, jwtSecret string) *Server{
 }
 
 func (s *Server) CreateUser(ctx context.Context, req *authpb.CreateUserRequest) (*authpb.CreateUserResponse, error) {
+	if req.Role != "admin" && req.Role != "operador" {
+		return nil, status.Errorf(codes.InvalidArgument, "papel %q inválido: use 'admin' ou 'operador'", req.Role)
+	}
+	if req.Email == "" || req.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "e-mail e senha são obrigatórios")
+	}
+
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "erro ao gerar hash da senha: %v", err)
 	}
 
 	user := &db.User{
-		Email: 			req.Email,
-		PasswordHash: 	hash,
-		Role: 			req.Role,
+		Email:        req.Email,
+		PasswordHash: hash,
+		Role:         req.Role,
 	}
 
 	if err := s.repo.Create(user); err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, status.Errorf(codes.AlreadyExists, "já existe usuário com o e-mail %q", req.Email)
+		}
+		return nil, status.Errorf(codes.Internal, "erro ao criar usuário: %v", err)
 	}
 
 	return &authpb.CreateUserResponse{UserId: user.ID}, nil
