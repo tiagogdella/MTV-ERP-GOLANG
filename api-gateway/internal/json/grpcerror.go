@@ -25,6 +25,9 @@ func WriteGRPCError(w http.ResponseWriter, err error) {
 	// Tipo: Negócio | status: 422 | Log: false
 	case codes.FailedPrecondition:
 		WriteError(w, http.StatusUnprocessableEntity, st.Message())
+	// Tipo: Negócio | status: 401 | Log: false
+	case codes.Unauthenticated:
+		WriteError(w, http.StatusUnauthorized, st.Message())
 	// Tipo: Infra | status: 503 | Log: true
 	case codes.Unavailable:
 		slog.Error("serviço interno indisponível", "error", err)

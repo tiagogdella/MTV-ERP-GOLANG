@@ -18,7 +18,9 @@ import (
 	"mtv-erp/api-gateway/internal/handlers"
 	"mtv-erp/api-gateway/internal/health"
 	"mtv-erp/api-gateway/internal/observability"
+	"mtv-erp/api-gateway/internal/auth"
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
+	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 )
 
 func main() {
@@ -54,6 +56,15 @@ func main() {
 	}
 	defer catalogConn.Close()
 	catalogClient := catalogv1.NewCatalogServiceClient(catalogConn) // Métodos
+
+	authConn, err := grpc.NewClient(cfg.AuthServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		slog.Error("falha ao conectar com o auth-service", "error", err)
+		os.Exit(1)
+	}
+	defer authConn.Close()
+	authClient := authv1.NewAuthServiceClient(authConn)
+
 	viacepClient := viacep.NewClient(cfg.ViaCEPBaseURL, 5*time.Second)
 
 	r := chi.NewRouter()
@@ -70,23 +81,30 @@ func main() {
 
 	// Routes
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/products", func(r chi.Router) {
-			r.Get("/", handlers.HandleListProducts(catalogClient))
-			r.Post("/", handlers.HandleCreateProduct(catalogClient))
-			r.Route("/{id}", func(r chi.Router) {
-				r.Get("/", handlers.HandleGetProduct(catalogClient))
-				r.Patch("/", handlers.HandleDeactivateProduct(catalogClient))
+		r.Post("/auth/login", handlers.HandleLogin(authClient))
+		
+		r.Group(func(r chi.Router){
+			r.Use(auth.RequireAuth(authClient)) // Middleware
+			r.With(auth.RequireRole("admin")).Post("/users", handlers.HandleCreateUser(authClient))
+
+			r.Route("/products", func(r chi.Router) {
+				r.Get("/", handlers.HandleListProducts(catalogClient))
+				r.Post("/", handlers.HandleCreateProduct(catalogClient))
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", handlers.HandleGetProduct(catalogClient))
+					r.Patch("/", handlers.HandleDeactivateProduct(catalogClient))
+				})
 			})
-		})
-		r.Route("/suppliers", func(r chi.Router) {
-			r.Get("/", handlers.HandleListSuppliers(catalogClient))
-			r.Post("/", handlers.HandleCreateSupplier(catalogClient))
-			r.Route("/{id}", func(r chi.Router) {
-				r.Get("/", handlers.HandleGetSupplier(catalogClient))
-				r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
+			r.Route("/suppliers", func(r chi.Router) {
+				r.Get("/", handlers.HandleListSuppliers(catalogClient))
+				r.Post("/", handlers.HandleCreateSupplier(catalogClient))
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", handlers.HandleGetSupplier(catalogClient))
+					r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
+				})
 			})
-		})
-		r.Get("/addresses/{cep}", handlers.HandleGetAddress(viacepClient))
+			r.Get("/addresses/{cep}", handlers.HandleGetAddress(viacepClient))
+		})	
 	})
 
 	slog.Info("service iniciado", "service", "api-gateway", "env", cfg.Environment, "port", cfg.Port)

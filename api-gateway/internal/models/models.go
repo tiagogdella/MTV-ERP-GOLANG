@@ -39,3 +39,24 @@ type Address struct {
 	City         string `json:"city"`
 	State        string `json:"state"`
 }
+
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginOutput struct {
+	Token string `json:"token"`
+}
+
+type UserInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
+type User struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
