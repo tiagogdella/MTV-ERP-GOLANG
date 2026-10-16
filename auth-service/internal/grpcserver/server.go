@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
+
 	"mtv-erp/auth-service/internal/auth"
 	authpb "mtv-erp/auth-service/internal/authpb/auth/v1"
 	"mtv-erp/auth-service/internal/db"
@@ -41,16 +45,19 @@ func (s *Server) CreateUser(ctx context.Context, req *authpb.CreateUserRequest) 
 func (s *Server) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
 	user, err := s.repo.FindByEmail(req.Email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.Unauthenticated, "credenciais inválidas")
+		}
+		return nil, status.Errorf(codes.Internal, "erro ao buscar usuário: %v", err)
 	}
 
 	if err := auth.CheckPassword(req.Password, user.PasswordHash); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, status.Error(codes.Unauthenticated, "credenciais inválidas")
 	}
 
 	token, err := auth.GenerateToken(user.ID, user.Role, s.jwtSecret)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "erro ao gerar token: %v", err)
 	}
 
 	return &authpb.LoginResponse{Token: token}, nil

@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -94,5 +97,22 @@ func TestLoginIntegration(t *testing.T) {
 		t.Errorf("expected role 'operador', got '%s'", claims.Role)
 	}
 
+	// Wrong password
+	_, err = server.Login(ctx, &authpb.LoginRequest{
+		Email:    "integration@mtv.com.br",
+		Password: "senha-errada",
+	})
+	if status.Code(err) != codes.Unauthenticated {
+		t.Errorf("senha errada: esperado Unauthenticated, veio %v", status.Code(err))
+	}
+
+	// Wrong e-mail
+	_, err = server.Login(ctx, &authpb.LoginRequest{
+		Email:    "nao-existe@mtv.com.br",
+		Password: "senha123",
+	})
+	if status.Code(err) != codes.Unauthenticated {
+		t.Errorf("e-mail inexistente: esperado Unauthenticated, veio %v", status.Code(err))
+	}
 }
 
