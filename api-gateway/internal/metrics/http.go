@@ -37,6 +37,7 @@ func Middleware(next http.Handler) http.Handler {
 			route = "desconhecida"
 		}
 
+		route = strings.TrimSuffix(route, "/*")
 		if len(route) > 1 {
 			route = strings.TrimSuffix(route, "/")
 		}
