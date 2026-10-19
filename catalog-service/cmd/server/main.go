@@ -20,6 +20,8 @@ import (
 	"mtv-erp/catalog-service/internal/interceptors"
 	"mtv-erp/catalog-service/internal/grpcserver"
 	catalogv1 "mtv-erp/catalog-service/internal/pb/catalog/v1"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -52,15 +54,21 @@ func main() {
 	unitRepo := db.NewUnitOfMeasureRepository(database)
 	supplierRepo := db.NewSupplierRepository(database)
 
+	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	prometheus.MustRegister(srvMetrics)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			srvMetrics.UnaryServerInterceptor(),
 			interceptors.Recovery(),
 			interceptors.Logging(),
 		),
 	)
 
 	catalogv1.RegisterCatalogServiceServer(grpcServer, grpcserver.NewServer(productRepo, unitRepo, supplierRepo))
+
+	srvMetrics.InitializeMetrics(grpcServer)
 
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()
