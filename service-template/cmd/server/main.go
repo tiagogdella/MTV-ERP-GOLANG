@@ -18,6 +18,8 @@ import (
 	"mtv-erp/service-template/internal/observability"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"mtv-erp/service-template/internal/interceptors"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -48,15 +50,22 @@ func main() {
 	slog.Info("Conectado ao banco de dados")
 	_ = database // rep e ser gRPC do servicço entram aqui
 	
+	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	prometheus.MustRegister(srvMetrics)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			srvMetrics.UnaryServerInterceptor(),
 			interceptors.Recovery(),
 			interceptors.Logging(),
 		),
 	)
 
 	reflection.Register(grpcServer)
+
+	srvMetrics.InitializeMetrics(grpcServer)
+	
 	healthServer := grpchealth.NewServer()
 	grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
 	healthServer.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)
