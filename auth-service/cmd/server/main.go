@@ -17,6 +17,8 @@ import (
 	"mtv-erp/auth-service/internal/observability"
 	"mtv-erp/auth-service/internal/interceptors"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -47,16 +49,21 @@ func main() {
 	slog.Info("conectado ao banco de dados")
 
 	repo := db.NewUserRepository(database)
-	
+
+	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	prometheus.MustRegister(srvMetrics)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			srvMetrics.UnaryServerInterceptor(),
 			interceptors.Recovery(),
 			interceptors.Logging(),
 		),
 	)
 	authpb.RegisterAuthServiceServer(grpcServer, grpcserver.NewServer(repo, cfg.JWTSecret))
 
+	srvMetrics.InitializeMetrics(grpcServer)
 
 	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
 	if err != nil {
