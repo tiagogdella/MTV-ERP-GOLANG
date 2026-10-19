@@ -20,6 +20,8 @@ import (
 	"mtv-erp/inventory-service/internal/interceptors"
 	"mtv-erp/inventory-service/internal/grpcserver" 
 	inventoryv1 "mtv-erp/inventory-service/internal/pb/inventory/v1"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -52,9 +54,13 @@ func main() {
 	lotRepo := db.NewLotsRepository(database)
 	movementRepo := db.NewStockMovementRepository(database)
 
+	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	prometheus.MustRegister(srvMetrics)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			srvMetrics.UnaryServerInterceptor(),
 			interceptors.Recovery(),
 			interceptors.Logging(),
 		),
@@ -62,6 +68,8 @@ func main() {
 
 	inventoryv1.RegisterInventoryServiceServer(grpcServer, grpcserver.NewServer(lotRepo, movementRepo))
 
+	srvMetrics.InitializeMetrics(grpcServer)
+	
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()
 	grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
