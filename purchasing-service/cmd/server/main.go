@@ -76,7 +76,12 @@ func main() {
 	purchaseRepo := db.NewPurchaseRepository(database)
 	purchaseService := service.NewPurchaseService(purchaseRepo, catalogClient, inventoryClient)
 
-	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	srvMetrics := grpcprom.NewServerMetrics(
+		grpcprom.WithServerHandlingTimeHistogram(
+			grpcprom.WithHistogramBuckets([]float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1}),
+		),
+	)
+	
 	prometheus.MustRegister(srvMetrics)
 
 	grpcServer := grpc.NewServer(
@@ -91,7 +96,7 @@ func main() {
 	purchasingv1.RegisterPurchasingServiceServer(grpcServer, grpcserver.NewServer(purchaseService))
 
 	srvMetrics.InitializeMetrics(grpcServer)
-	
+
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()
 	grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
