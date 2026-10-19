@@ -19,6 +19,7 @@ import (
 	"mtv-erp/api-gateway/internal/health"
 	"mtv-erp/api-gateway/internal/observability"
 	"mtv-erp/api-gateway/internal/auth"
+	"mtv-erp/api-gateway/internal/metrics"
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 )
@@ -72,6 +73,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer) // (um panic vira 500 em vez de derrubar o processo)
 	r.Use(middleware.RequestID) // Cria um ID para Reqs
+	r.Use(metrics.Middleware)
 	r.Use(middleware.Timeout(10 * time.Second)) // Timer
 	r.Use(middleware.AllowContentType("application/json")) // Filtra apenas JSON com 415
 
