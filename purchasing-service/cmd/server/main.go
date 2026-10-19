@@ -24,6 +24,8 @@ import (
 	purchasingv1 "mtv-erp/purchasing-service/internal/pb/purchasing/v1"
 	"mtv-erp/purchasing-service/internal/service"
 	"mtv-erp/purchasing-service/internal/grpcserver"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -74,9 +76,13 @@ func main() {
 	purchaseRepo := db.NewPurchaseRepository(database)
 	purchaseService := service.NewPurchaseService(purchaseRepo, catalogClient, inventoryClient)
 
+	srvMetrics := grpcprom.NewServerMetrics(grpcprom.WithServerHandlingTimeHistogram())
+	prometheus.MustRegister(srvMetrics)
+
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
+			srvMetrics.UnaryServerInterceptor(),
 			interceptors.Recovery(),
 			interceptors.Logging(),
 		),
@@ -84,6 +90,8 @@ func main() {
 
 	purchasingv1.RegisterPurchasingServiceServer(grpcServer, grpcserver.NewServer(purchaseService))
 
+	srvMetrics.InitializeMetrics(grpcServer)
+	
 	reflection.Register(grpcServer)
 	healthServer := grpchealth.NewServer()
 	grpc_health_v1.RegisterHealthServer(grpcServer, healthServer)
