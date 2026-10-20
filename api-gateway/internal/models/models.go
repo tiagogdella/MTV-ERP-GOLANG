@@ -1,5 +1,6 @@
 package models
 
+// Catalog
 type Product struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -40,6 +41,7 @@ type Address struct {
 	State        string `json:"state"`
 }
 
+// Auth
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -59,4 +61,22 @@ type User struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 	Role  string `json:"role"`
+}
+
+// Units
+type Unit struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	ConversionFactorKg string `json:"conversionFactorKg"`
+}
+
+type UnitInput struct {
+	Name               string `json:"name"`
+	ConversionFactorKg string `json:"conversionFactorKg"`
+}
+
+type Conversion struct {
+	UnitID   string `json:"unitId"`
+	Quantity string `json:"quantity"`
+	Kg       string `json:"kg"`
 }

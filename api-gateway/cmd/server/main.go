@@ -105,6 +105,11 @@ func main() {
 					r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
 				})
 			})
+			r.Route("/units", func(r chi.Router) {
+				r.Get("/", handlers.HandleListUnits(catalogClient))
+				r.Post("/", handlers.HandleCreateUnit(catalogClient))
+				r.Get("/{id}/conversion", handlers.HandleConvertUnit(catalogClient))
+			})
 			r.Get("/addresses/{cep}", handlers.HandleGetAddress(viacepClient))
 		})	
 	})
