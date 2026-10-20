@@ -2,10 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/shopspring/decimal"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
+
 	"mtv-erp/purchasing-service/internal/db"
 	catalogv1 "mtv-erp/purchasing-service/internal/pb/catalog/v1"
 	inventoryv1 "mtv-erp/purchasing-service/internal/pb/inventory/v1"
@@ -51,9 +57,12 @@ type CreatePurchaseResult struct {
 }
 
 func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurchaseInput) (*CreatePurchaseResult, error) {
-	//Validamos se fornecedor existe
+	if err := validatePurchaseInput(input); err != nil {
+		return nil, err
+	}
+
 	if _, err := s.catalogClient.GetSupplier(ctx, &catalogv1.GetSupplierRequest{Id: input.SupplierID}); err != nil {
-		return nil, fmt.Errorf("fornecedor inválido: %w", err)
+		return nil, translateCatalogError(err, "")
 	}
 
 	purchase := &db.Purchase{
@@ -66,10 +75,11 @@ func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurcha
 	items := make([]db.PurchaseItem, 0, len(input.Items))
 	kgByItem := make([]decimal.Decimal, 0, len(input.Items))
 
-	for _, itemInput := range input.Items {
-		//Validamos se produto existe
+	for i, itemInput := range input.Items {
+		prefix := fmt.Sprintf("item %d: ", i+1)
+
 		if _, err := s.catalogClient.GetProduct(ctx, &catalogv1.GetProductRequest{Id: itemInput.ProductID}); err != nil {
-			return nil, fmt.Errorf("produto inválido: %w", err)
+			return nil, translateCatalogError(err, prefix)
 		}
 
 		convResp, err := s.catalogClient.ConvertToKg(ctx, &catalogv1.ConvertToKgRequest{
@@ -77,12 +87,12 @@ func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurcha
 			Quantity: itemInput.Quantity.String(),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("unidade inválida: %w", err)
+			return nil, translateCatalogError(err, prefix)
 		}
 
 		kg, err := decimal.NewFromString(convResp.Kg)
 		if err != nil {
-			return nil, fmt.Errorf("kg convertido inválido: %w", err)
+			return nil, status.Errorf(codes.Internal, "%skg convertido inválido: %v", prefix, err)
 		}
 
 		items = append(items, db.PurchaseItem{
@@ -94,9 +104,11 @@ func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurcha
 		kgByItem = append(kgByItem, kg)
 	}
 
-	//Criamos purchase para pegar o ID que vai ser usado em purchase_item
 	if err := s.purchaseRepo.Create(purchase, items); err != nil {
-		return nil, fmt.Errorf("falha ao salvar compra: %w", err)
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, status.Errorf(codes.AlreadyExists, "a nota fiscal %q já foi lançada para este fornecedor", input.InvoiceNumber)
+		}
+		return nil, status.Errorf(codes.Internal, "falha ao salvar compra: %v", err)
 	}
 
 	result := &CreatePurchaseResult{
@@ -113,7 +125,7 @@ func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurcha
 			ReceivedAt:     input.InvoiceDate.Format("2006-01-02"),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("falha ao criar lote pro item %s: %w", item.ID, err)
+			return nil, status.Errorf(codes.Internal, "compra %s gravada, mas falhou ao criar o lote do item %d: %v", purchase.ID, i+1, status.Convert(err).Message())
 		}
 
 		result.Items = append(result.Items, CreatePurchaseItemResult{
@@ -123,4 +135,41 @@ func (s *PurchaseService) CreatePurchase(ctx context.Context, input CreatePurcha
 	}
 
 	return result, nil
+}
+
+func validatePurchaseInput(in CreatePurchaseInput) error {
+	if strings.TrimSpace(in.InvoiceNumber) == "" {
+		return status.Error(codes.InvalidArgument, "número da nota fiscal é obrigatório")
+	}
+	if !in.InvoiceValue.IsPositive() {
+		return status.Error(codes.InvalidArgument, "valor da nota fiscal deve ser maior que zero")
+	}
+	if len(in.Items) == 0 {
+		return status.Error(codes.InvalidArgument, "a compra precisa de pelo menos um item")
+	}
+	for i, item := range in.Items {
+		if strings.TrimSpace(item.Safra) == "" {
+			return status.Errorf(codes.InvalidArgument, "item %d: safra é obrigatória", i+1)
+		}
+		if !item.Quantity.IsPositive() {
+			return status.Errorf(codes.InvalidArgument, "item %d: quantidade deve ser maior que zero", i+1)
+		}
+	}
+	return nil
+}
+
+func translateCatalogError(err error, prefix string) error {
+	st := status.Convert(err)
+	switch st.Code() {
+	case codes.NotFound:
+		return status.Error(codes.FailedPrecondition, prefix+st.Message())
+	case codes.InvalidArgument:
+		return status.Error(codes.InvalidArgument, prefix+st.Message())
+	case codes.Unavailable:
+		return status.Error(codes.Unavailable, "catálogo indisponível no momento")
+	case codes.DeadlineExceeded:
+		return status.Error(codes.DeadlineExceeded, "catálogo não respondeu a tempo")
+	default:
+		return status.Errorf(codes.Internal, "%serro ao consultar o catálogo: %s", prefix, st.Message())
+	}
 }

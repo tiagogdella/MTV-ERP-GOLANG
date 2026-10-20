@@ -84,7 +84,7 @@ func TestCreatePurchase_Success(t *testing.T) {
 		Lot: &inventoryv1.Lot{Id: lotID, ProductId: productID},
 	}, nil)
 
-	result, err := svc.CreatePurchase(ctx, CreatePurchaseInput{
+	input := CreatePurchaseInput{
 		SupplierID:    supplierID,
 		InvoiceNumber: "NF-001",
 		InvoiceDate:   time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC),
@@ -97,7 +97,9 @@ func TestCreatePurchase_Success(t *testing.T) {
 				Quantity:  decimal.NewFromInt(10),
 			},
 		},
-	})
+	}
+
+	result, err := svc.CreatePurchase(ctx, input)
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, result.Purchase.ID)
@@ -105,6 +107,9 @@ func TestCreatePurchase_Success(t *testing.T) {
 	require.Len(t, result.Items, 1)
 	assert.Equal(t, lotID, result.Items[0].LotID)
 	assert.NotEmpty(t, result.Items[0].Item.ID)
+
+	_, err = svc.CreatePurchase(ctx, input)
+	assert.Equal(t, codes.AlreadyExists, status.Code(err))
 
 	catalogClient.AssertExpectations(t)
 	inventoryClient.AssertExpectations(t)
@@ -127,5 +132,62 @@ func TestCreatePurchase_SupplierNotFound(t *testing.T) {
 	})
 
 	require.Error(t, err)
-	assert.Equal(t, codes.NotFound, status.Code(err))
+	assert.Equal(t, codes.FailedPrecondition, status.Code(err))
+}
+
+func TestValidatePurchaseInput(t *testing.T) {
+	valid := func() CreatePurchaseInput {
+		return CreatePurchaseInput{
+			InvoiceNumber: "NF-1",
+			InvoiceValue:  decimal.NewFromInt(100),
+			Items:         []CreatePurchaseItemInput{{Safra: "2026", Quantity: decimal.NewFromInt(1)}},
+		}
+	}
+
+	tests := []struct {
+		name     string
+		mutate   func(in *CreatePurchaseInput)
+		wantCode codes.Code
+	}{
+		{"compra válida", func(in *CreatePurchaseInput) {}, codes.OK},
+		{"sem número da nota", func(in *CreatePurchaseInput) { in.InvoiceNumber = "  " }, codes.InvalidArgument},
+		{"valor zero", func(in *CreatePurchaseInput) { in.InvoiceValue = decimal.Zero }, codes.InvalidArgument},
+		{"sem itens", func(in *CreatePurchaseInput) { in.Items = nil }, codes.InvalidArgument},
+		{"item sem safra", func(in *CreatePurchaseInput) { in.Items[0].Safra = "" }, codes.InvalidArgument},
+		{"item com quantidade negativa", func(in *CreatePurchaseInput) { in.Items[0].Quantity = decimal.NewFromInt(-1) }, codes.InvalidArgument},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			in := valid()
+			tt.mutate(&in)
+			assert.Equal(t, tt.wantCode, status.Code(validatePurchaseInput(in)))
+		})
+	}
+}
+
+func TestCreatePurchase_NonExistentProduct(t *testing.T) {
+	ctx := context.Background()
+	catalogClient := &fakeCatalogClient{}
+	svc := NewPurchaseService(nil, catalogClient, &fakeInventoryClient{})
+
+	catalogClient.On("GetSupplier", mock.Anything, mock.Anything).Return(&catalogv1.GetSupplierResponse{Supplier: &catalogv1.Supplier{Id: "s"}}, nil)
+	catalogClient.On("GetProduct", mock.Anything, mock.Anything).Return(&catalogv1.GetProductResponse{Product: &catalogv1.Product{Id: "p"}}, nil).Once()
+	catalogClient.On("ConvertToKg", mock.Anything, mock.Anything).Return(&catalogv1.ConvertToKgResponse{Kg: "300"}, nil).Once()
+	catalogClient.On("GetProduct", mock.Anything, mock.Anything).Return(nil, status.Error(codes.NotFound, `produto "x" não encontrado`)).Once()
+
+	_, err := svc.CreatePurchase(ctx, CreatePurchaseInput{
+		SupplierID:    "s",
+		InvoiceNumber: "NF-3",
+		InvoiceDate:   time.Now(),
+		InvoiceValue:  decimal.NewFromInt(500),
+		Items: []CreatePurchaseItemInput{
+			{ProductID: "p", UnitID: "u", Safra: "2026", Quantity: decimal.NewFromInt(10)},
+			{ProductID: "x", UnitID: "u", Safra: "2026", Quantity: decimal.NewFromInt(5)},
+		},
+	})
+
+	assert.Equal(t, codes.FailedPrecondition, status.Code(err))
+	assert.Equal(t, `item 2: produto "x" não encontrado`, status.Convert(err).Message())
+	catalogClient.AssertExpectations(t)
 }
