@@ -10,7 +10,7 @@
   ],
   "title": "MTV ERP - api-gateway",
   "uid": "mtv-erp-api-gateway",
-  "tags": ["mtv-erp", "api-gateway"],
+  "tags": ["mtv-erp", "api-gateway", "grpc"],
   "timezone": "browser",
   "schemaVersion": 39,
   "refresh": "10s",
@@ -22,11 +22,7 @@
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
-        {
-          "refId": "A",
-          "expr": "up{namespace=\"mtv-erp\"}",
-          "legendFormat": "{{job}}"
-        }
+        { "refId": "A", "expr": "up{namespace=\"mtv-erp\"}", "legendFormat": "{{job}}" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -45,14 +41,21 @@
       "options": { "colorMode": "background", "graphMode": "none", "textMode": "value_and_name" }
     },
     {
+      "type": "row",
+      "title": "api-gateway (HTTP, visto de fora)",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
       "type": "timeseries",
       "title": "Requisições/s por rota",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[1m]))",
+          "expr": "sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[5m])) > 0",
           "legendFormat": "{{route}}"
         }
       ],
@@ -61,12 +64,12 @@
     {
       "type": "timeseries",
       "title": "Requisições/s por status",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 5, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (status) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[1m]))",
+          "expr": "sum by (status) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[5m])) > 0",
           "legendFormat": "{{status}}"
         }
       ],
@@ -75,12 +78,12 @@
     {
       "type": "timeseries",
       "title": "Taxa de erro por rota (4xx + 5xx)",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 13, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\", status=~\"4..|5..\"}[1m])) / sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[1m]))",
+          "expr": "sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\", status=~\"4..|5..\"}[5m])) / sum by (route) (rate(http_requests_total{job=\"api-gateway\", route=~\"/api/.*\"}[5m]))",
           "legendFormat": "{{route}}"
         }
       ],
@@ -89,13 +92,76 @@
     {
       "type": "timeseries",
       "title": "Latência p95 por rota",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 13, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket{job=\"api-gateway\", route=~\"/api/.*\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(http_request_duration_seconds_bucket{job=\"api-gateway\", route=~\"/api/.*\"}[5m])))",
           "legendFormat": "{{route}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "type": "row",
+      "title": "Serviços internos (gRPC, visto de dentro)",
+      "gridPos": { "x": 0, "y": 21, "w": 24, "h": 1 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Chamadas/s por método",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (job, grpc_method) (rate(grpc_server_handled_total{namespace=\"mtv-erp\"}[5m])) > 0",
+          "legendFormat": "{{job}} · {{grpc_method}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Chamadas/s por código gRPC",
+      "gridPos": { "x": 12, "y": 22, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (grpc_code) (rate(grpc_server_handled_total{namespace=\"mtv-erp\"}[5m])) > 0",
+          "legendFormat": "{{grpc_code}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "stacking": { "mode": "normal" }, "fillOpacity": 30 } } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Taxa de erro de INFRA por serviço",
+      "gridPos": { "x": 0, "y": 30, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (job) (rate(grpc_server_handled_total{namespace=\"mtv-erp\", grpc_code=~\"Internal|Unavailable|DeadlineExceeded|Unknown|DataLoss\"}[5m])) / sum by (job) (rate(grpc_server_handled_total{namespace=\"mtv-erp\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Latência p95 por método",
+      "gridPos": { "x": 12, "y": 30, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, job, grpc_method) (rate(grpc_server_handling_seconds_bucket{namespace=\"mtv-erp\"}[5m])))",
+          "legendFormat": "{{job}} · {{grpc_method}}"
         }
       ],
       "fieldConfig": { "defaults": { "unit": "s" } }
