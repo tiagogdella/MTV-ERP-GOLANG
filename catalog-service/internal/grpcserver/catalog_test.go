@@ -70,6 +70,22 @@ func TestCatalogServiceIntegration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "75", convResp.Kg)
 
+	_, err = server.CreateUnitOfMeasure(ctx, &catalogv1.CreateUnitOfMeasureRequest{Name: "saco", ConversionFactorKg: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.ConvertToKg(ctx, &catalogv1.ConvertToKgRequest{UnitId: unitResp.UnitOfMeasure.Id, Quantity: "-1"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.ConvertToKg(ctx, &catalogv1.ConvertToKgRequest{UnitId: uuid.NewString(), Quantity: "10"})
+	assert.Equal(t, codes.NotFound, status.Code(err))
+
+	_, err = server.ConvertToKg(ctx, &catalogv1.ConvertToKgRequest{UnitId: "abc", Quantity: "10"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	fromResp, err := server.ConvertFromKg(ctx, &catalogv1.ConvertFromKgRequest{UnitId: unitResp.UnitOfMeasure.Id, Kg: "75"})
+	require.NoError(t, err)
+	assert.Equal(t, "2.5", fromResp.Quantity)
+
 	listResp, err := server.ListProducts(ctx, &catalogv1.ListProductsRequest{})
 	require.NoError(t, err)
 	assert.True(t, containsProductID(listResp.Products, createProductResp.Product.Id))

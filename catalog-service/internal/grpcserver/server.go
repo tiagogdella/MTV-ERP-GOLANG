@@ -3,6 +3,7 @@ package grpcserver
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -78,8 +79,15 @@ func (s *Server) DeactivateProduct(ctx context.Context, req *catalogv1.Deactivat
 }
 
 func (s *Server) CreateUnitOfMeasure(ctx context.Context, req *catalogv1.CreateUnitOfMeasureRequest) (*catalogv1.CreateUnitOfMeasureResponse, error) {
+	if strings.TrimSpace(req.Name) == "" {
+		return nil, status.Error(codes.InvalidArgument, "nome da unidade é obrigatório")
+	}
+
 	factor, err := decimal.NewFromString(req.ConversionFactorKg)
 	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "fator de conversão %q não é um número válido", req.ConversionFactorKg)
+	}
+	if err := validateFactor(factor); err != nil {
 		return nil, err
 	}
 
@@ -89,7 +97,7 @@ func (s *Server) CreateUnitOfMeasure(ctx context.Context, req *catalogv1.CreateU
 	}
 
 	if err := s.unitRepo.Create(unit); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "erro ao criar unidade: %v", err)
 	}
 
 	return &catalogv1.CreateUnitOfMeasureResponse{
@@ -104,7 +112,7 @@ func (s *Server) CreateUnitOfMeasure(ctx context.Context, req *catalogv1.CreateU
 func (s *Server) ListUnitsOfMeasure(ctx context.Context, req *catalogv1.ListUnitsOfMeasureRequest) (*catalogv1.ListUnitsOfMeasureResponse, error) {
 	units, err := s.unitRepo.List()
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "erro ao listar unidades: %v", err)
 	}
 
 	var pbUnits []*catalogv1.UnitOfMeasure
@@ -122,38 +130,42 @@ func (s *Server) ListUnitsOfMeasure(ctx context.Context, req *catalogv1.ListUnit
 }
 
 func (s *Server) ConvertToKg(ctx context.Context, req *catalogv1.ConvertToKgRequest) (*catalogv1.ConvertToKgResponse, error) {
-	unit, err := s.unitRepo.FindByID(req.UnitId)
+	if err := validateID(req.UnitId); err != nil {
+		return nil, err
+	}
+
+	quantity, err := parsePositiveDecimal(req.Quantity, "quantidade")
 	if err != nil {
 		return nil, err
 	}
 
-	quantity, err := decimal.NewFromString(req.Quantity)
+	unit, err := s.findUnit(req.UnitId)
 	if err != nil {
 		return nil, err
 	}
-
-	kg := unit.ToKg(quantity)
 
 	return &catalogv1.ConvertToKgResponse{
-		Kg: kg.String(),
+		Kg: unit.ToKg(quantity).String(),
 	}, nil
 }
 
 func (s *Server) ConvertFromKg(ctx context.Context, req *catalogv1.ConvertFromKgRequest) (*catalogv1.ConvertFromKgResponse, error) {
-	unit, err := s.unitRepo.FindByID(req.UnitId)
+	if err := validateID(req.UnitId); err != nil {
+		return nil, err
+	}
+
+	kg, err := parsePositiveDecimal(req.Kg, "kg")
 	if err != nil {
 		return nil, err
 	}
 
-	kg, err := decimal.NewFromString(req.Kg)
+	unit, err := s.findUnit(req.UnitId)
 	if err != nil {
 		return nil, err
 	}
-
-	quantity := unit.FromKg(kg)
 
 	return &catalogv1.ConvertFromKgResponse{
-		Quantity: quantity.String(),
+		Quantity: unit.FromKg(kg).String(),
 	}, nil
 }
 
@@ -269,4 +281,41 @@ func validateID(id string) error {
 		return status.Errorf(codes.InvalidArgument, "id %q não é um UUID válido", id)
 	}
 	return nil
+}
+
+var maxFactor = decimal.NewFromInt(100_000_000)
+
+func validateFactor(f decimal.Decimal) error {
+	if !f.IsPositive() {
+		return status.Error(codes.InvalidArgument, "fator de conversão deve ser maior que zero")
+	}
+	if !f.Equal(f.Round(4)) {
+		return status.Error(codes.InvalidArgument, "fator de conversão aceita no máximo 4 casas decimais")
+	}
+	if f.GreaterThanOrEqual(maxFactor) {
+		return status.Error(codes.InvalidArgument, "fator de conversão deve ser menor que 100.000.000")
+	}
+	return nil
+}
+
+func parsePositiveDecimal(value, field string) (decimal.Decimal, error) {
+	d, err := decimal.NewFromString(value)
+	if err != nil {
+		return decimal.Decimal{}, status.Errorf(codes.InvalidArgument, "%s %q não é um número válido", field, value)
+	}
+	if !d.IsPositive() {
+		return decimal.Decimal{}, status.Errorf(codes.InvalidArgument, "%s deve ser maior que zero", field)
+	}
+	return d, nil
+}
+
+func (s *Server) findUnit(id string) (*db.UnitOfMeasure, error) {
+	unit, err := s.unitRepo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, "unidade %q não encontrada", id)
+		}
+		return nil, status.Errorf(codes.Internal, "erro ao buscar unidade: %v", err)
+	}
+	return unit, nil
 }
