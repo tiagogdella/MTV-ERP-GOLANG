@@ -476,6 +476,7 @@ func (x *GetStockByProductRequest) GetProductId() string {
 type GetStockByProductResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TotalKg       string                 `protobuf:"bytes,1,opt,name=total_kg,json=totalKg,proto3" json:"total_kg,omitempty"`
+	Lots          []*LotStock            `protobuf:"bytes,2,rep,name=lots,proto3" json:"lots,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -517,6 +518,65 @@ func (x *GetStockByProductResponse) GetTotalKg() string {
 	return ""
 }
 
+func (x *GetStockByProductResponse) GetLots() []*LotStock {
+	if x != nil {
+		return x.Lots
+	}
+	return nil
+}
+
+type LotStock struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Lot           *Lot                   `protobuf:"bytes,1,opt,name=lot,proto3" json:"lot,omitempty"`
+	BalanceKg     string                 `protobuf:"bytes,2,opt,name=balance_kg,json=balanceKg,proto3" json:"balance_kg,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LotStock) Reset() {
+	*x = LotStock{}
+	mi := &file_inventory_v1_inventory_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LotStock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LotStock) ProtoMessage() {}
+
+func (x *LotStock) ProtoReflect() protoreflect.Message {
+	mi := &file_inventory_v1_inventory_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LotStock.ProtoReflect.Descriptor instead.
+func (*LotStock) Descriptor() ([]byte, []int) {
+	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LotStock) GetLot() *Lot {
+	if x != nil {
+		return x.Lot
+	}
+	return nil
+}
+
+func (x *LotStock) GetBalanceKg() string {
+	if x != nil {
+		return x.BalanceKg
+	}
+	return ""
+}
+
 type GetLotDetailsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LotId         string                 `protobuf:"bytes,1,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
@@ -526,7 +586,7 @@ type GetLotDetailsRequest struct {
 
 func (x *GetLotDetailsRequest) Reset() {
 	*x = GetLotDetailsRequest{}
-	mi := &file_inventory_v1_inventory_proto_msgTypes[8]
+	mi := &file_inventory_v1_inventory_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -538,7 +598,7 @@ func (x *GetLotDetailsRequest) String() string {
 func (*GetLotDetailsRequest) ProtoMessage() {}
 
 func (x *GetLotDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_inventory_v1_inventory_proto_msgTypes[8]
+	mi := &file_inventory_v1_inventory_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -551,7 +611,7 @@ func (x *GetLotDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLotDetailsRequest.ProtoReflect.Descriptor instead.
 func (*GetLotDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{8}
+	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetLotDetailsRequest) GetLotId() string {
@@ -572,7 +632,7 @@ type GetLotDetailsResponse struct {
 
 func (x *GetLotDetailsResponse) Reset() {
 	*x = GetLotDetailsResponse{}
-	mi := &file_inventory_v1_inventory_proto_msgTypes[9]
+	mi := &file_inventory_v1_inventory_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -584,7 +644,7 @@ func (x *GetLotDetailsResponse) String() string {
 func (*GetLotDetailsResponse) ProtoMessage() {}
 
 func (x *GetLotDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_inventory_v1_inventory_proto_msgTypes[9]
+	mi := &file_inventory_v1_inventory_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -597,7 +657,7 @@ func (x *GetLotDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLotDetailsResponse.ProtoReflect.Descriptor instead.
 func (*GetLotDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{9}
+	return file_inventory_v1_inventory_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetLotDetailsResponse) GetLot() *Lot {
@@ -668,9 +728,14 @@ const file_inventory_v1_inventory_proto_rawDesc = "" +
 	"\bmovement\x18\x01 \x01(\v2\x1b.inventory.v1.StockMovementR\bmovement\"9\n" +
 	"\x18GetStockByProductRequest\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x01 \x01(\tR\tproductId\"6\n" +
+	"product_id\x18\x01 \x01(\tR\tproductId\"b\n" +
 	"\x19GetStockByProductResponse\x12\x19\n" +
-	"\btotal_kg\x18\x01 \x01(\tR\atotalKg\"-\n" +
+	"\btotal_kg\x18\x01 \x01(\tR\atotalKg\x12*\n" +
+	"\x04lots\x18\x02 \x03(\v2\x16.inventory.v1.LotStockR\x04lots\"N\n" +
+	"\bLotStock\x12#\n" +
+	"\x03lot\x18\x01 \x01(\v2\x11.inventory.v1.LotR\x03lot\x12\x1d\n" +
+	"\n" +
+	"balance_kg\x18\x02 \x01(\tR\tbalanceKg\"-\n" +
 	"\x14GetLotDetailsRequest\x12\x15\n" +
 	"\x06lot_id\x18\x01 \x01(\tR\x05lotId\"\x96\x01\n" +
 	"\x15GetLotDetailsResponse\x12#\n" +
@@ -696,7 +761,7 @@ func file_inventory_v1_inventory_proto_rawDescGZIP() []byte {
 	return file_inventory_v1_inventory_proto_rawDescData
 }
 
-var file_inventory_v1_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_inventory_v1_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_inventory_v1_inventory_proto_goTypes = []any{
 	(*Lot)(nil),                       // 0: inventory.v1.Lot
 	(*CreateLotRequest)(nil),          // 1: inventory.v1.CreateLotRequest
@@ -706,27 +771,30 @@ var file_inventory_v1_inventory_proto_goTypes = []any{
 	(*RegisterMovementResponse)(nil),  // 5: inventory.v1.RegisterMovementResponse
 	(*GetStockByProductRequest)(nil),  // 6: inventory.v1.GetStockByProductRequest
 	(*GetStockByProductResponse)(nil), // 7: inventory.v1.GetStockByProductResponse
-	(*GetLotDetailsRequest)(nil),      // 8: inventory.v1.GetLotDetailsRequest
-	(*GetLotDetailsResponse)(nil),     // 9: inventory.v1.GetLotDetailsResponse
+	(*LotStock)(nil),                  // 8: inventory.v1.LotStock
+	(*GetLotDetailsRequest)(nil),      // 9: inventory.v1.GetLotDetailsRequest
+	(*GetLotDetailsResponse)(nil),     // 10: inventory.v1.GetLotDetailsResponse
 }
 var file_inventory_v1_inventory_proto_depIdxs = []int32{
-	0, // 0: inventory.v1.CreateLotResponse.lot:type_name -> inventory.v1.Lot
-	3, // 1: inventory.v1.RegisterMovementResponse.movement:type_name -> inventory.v1.StockMovement
-	0, // 2: inventory.v1.GetLotDetailsResponse.lot:type_name -> inventory.v1.Lot
-	3, // 3: inventory.v1.GetLotDetailsResponse.movements:type_name -> inventory.v1.StockMovement
-	1, // 4: inventory.v1.InventoryService.CreateLot:input_type -> inventory.v1.CreateLotRequest
-	4, // 5: inventory.v1.InventoryService.RegisterMovement:input_type -> inventory.v1.RegisterMovementRequest
-	6, // 6: inventory.v1.InventoryService.GetStockByProduct:input_type -> inventory.v1.GetStockByProductRequest
-	8, // 7: inventory.v1.InventoryService.GetLotDetails:input_type -> inventory.v1.GetLotDetailsRequest
-	2, // 8: inventory.v1.InventoryService.CreateLot:output_type -> inventory.v1.CreateLotResponse
-	5, // 9: inventory.v1.InventoryService.RegisterMovement:output_type -> inventory.v1.RegisterMovementResponse
-	7, // 10: inventory.v1.InventoryService.GetStockByProduct:output_type -> inventory.v1.GetStockByProductResponse
-	9, // 11: inventory.v1.InventoryService.GetLotDetails:output_type -> inventory.v1.GetLotDetailsResponse
-	8, // [8:12] is the sub-list for method output_type
-	4, // [4:8] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0,  // 0: inventory.v1.CreateLotResponse.lot:type_name -> inventory.v1.Lot
+	3,  // 1: inventory.v1.RegisterMovementResponse.movement:type_name -> inventory.v1.StockMovement
+	8,  // 2: inventory.v1.GetStockByProductResponse.lots:type_name -> inventory.v1.LotStock
+	0,  // 3: inventory.v1.LotStock.lot:type_name -> inventory.v1.Lot
+	0,  // 4: inventory.v1.GetLotDetailsResponse.lot:type_name -> inventory.v1.Lot
+	3,  // 5: inventory.v1.GetLotDetailsResponse.movements:type_name -> inventory.v1.StockMovement
+	1,  // 6: inventory.v1.InventoryService.CreateLot:input_type -> inventory.v1.CreateLotRequest
+	4,  // 7: inventory.v1.InventoryService.RegisterMovement:input_type -> inventory.v1.RegisterMovementRequest
+	6,  // 8: inventory.v1.InventoryService.GetStockByProduct:input_type -> inventory.v1.GetStockByProductRequest
+	9,  // 9: inventory.v1.InventoryService.GetLotDetails:input_type -> inventory.v1.GetLotDetailsRequest
+	2,  // 10: inventory.v1.InventoryService.CreateLot:output_type -> inventory.v1.CreateLotResponse
+	5,  // 11: inventory.v1.InventoryService.RegisterMovement:output_type -> inventory.v1.RegisterMovementResponse
+	7,  // 12: inventory.v1.InventoryService.GetStockByProduct:output_type -> inventory.v1.GetStockByProductResponse
+	10, // 13: inventory.v1.InventoryService.GetLotDetails:output_type -> inventory.v1.GetLotDetailsResponse
+	10, // [10:14] is the sub-list for method output_type
+	6,  // [6:10] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_inventory_v1_inventory_proto_init() }
@@ -740,7 +808,7 @@ func file_inventory_v1_inventory_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_inventory_v1_inventory_proto_rawDesc), len(file_inventory_v1_inventory_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

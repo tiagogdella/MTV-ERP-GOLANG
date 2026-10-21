@@ -52,6 +52,12 @@ message GetStockByProductRequest {
 
 message GetStockByProductResponse {
   string total_kg = 1;
+  repeated LotStock lots = 2;
+}
+
+message LotStock {
+  Lot lot = 1;
+  string balance_kg = 2;
 }
 
 message GetLotDetailsRequest {

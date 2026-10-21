@@ -53,13 +53,13 @@ func setupTestServer(t *testing.T) *Server {
 	return NewServer(lotRepo, movementRepo)
 }
 
-func TestRegisterMovement_SemLoteFalha(t *testing.T) {
+func TestRegisterMovement_LotNotFound(t *testing.T) {
 	server := setupTestServer(t)
 	ctx := context.Background()
 
 	_, err := server.RegisterMovement(ctx, &inventoryv1.RegisterMovementRequest{
 		LotId:      uuid.NewString(),
-		Type:       "entrada",
+		Type:       "ajuste",
 		QuantityKg: "100",
 		OccurredAt: time.Now().Format(time.RFC3339),
 		Origin:     "teste",
@@ -69,7 +69,7 @@ func TestRegisterMovement_SemLoteFalha(t *testing.T) {
 	assert.Equal(t, codes.NotFound, status.Code(err))
 }
 
-func TestGetStockByProduct_SomaVariosLotes(t *testing.T) {
+func TestStock_LotStartsWithEntryAndSumsAcrossLots(t *testing.T) {
 	server := setupTestServer(t)
 	ctx := context.Background()
 
@@ -87,20 +87,17 @@ func TestGetStockByProduct_SomaVariosLotes(t *testing.T) {
 	lot2, err := server.CreateLot(ctx, &inventoryv1.CreateLotRequest{
 		ProductId:      productID,
 		PurchaseItemId: uuid.NewString(),
-		Safra:          "2026",
+		Safra:          "2025",
 		QuantityKg:     "500",
 		ReceivedAt:     "2026-09-05",
 	})
 	require.NoError(t, err)
 
-	_, err = server.RegisterMovement(ctx, &inventoryv1.RegisterMovementRequest{
-		LotId:      lot1.Lot.Id,
-		Type:       "entrada",
-		QuantityKg: "1000",
-		OccurredAt: time.Now().Format(time.RFC3339),
-		Origin:     "compra",
-	})
+	details, err := server.GetLotDetails(ctx, &inventoryv1.GetLotDetailsRequest{LotId: lot1.Lot.Id})
 	require.NoError(t, err)
+	require.Len(t, details.Movements, 1)
+	assert.Equal(t, "entrada", details.Movements[0].Type)
+	assert.Equal(t, "1000", details.BalanceKg)
 
 	_, err = server.RegisterMovement(ctx, &inventoryv1.RegisterMovementRequest{
 		LotId:      lot1.Lot.Id,
@@ -111,18 +108,38 @@ func TestGetStockByProduct_SomaVariosLotes(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = server.RegisterMovement(ctx, &inventoryv1.RegisterMovementRequest{
-		LotId:      lot2.Lot.Id,
-		Type:       "entrada",
-		QuantityKg: "500",
-		OccurredAt: time.Now().Format(time.RFC3339),
-		Origin:     "compra",
-	})
-	require.NoError(t, err)
-
-	resp, err := server.GetStockByProduct(ctx, &inventoryv1.GetStockByProductRequest{
-		ProductId: productID,
-	})
+	resp, err := server.GetStockByProduct(ctx, &inventoryv1.GetStockByProductRequest{ProductId: productID})
 	require.NoError(t, err)
 	assert.Equal(t, "1200", resp.TotalKg)
+
+	require.Len(t, resp.Lots, 2)
+	assert.Equal(t, lot1.Lot.Id, resp.Lots[0].Lot.Id)
+	assert.Equal(t, "700", resp.Lots[0].BalanceKg)
+	assert.Equal(t, lot2.Lot.Id, resp.Lots[1].Lot.Id)
+	assert.Equal(t, "500", resp.Lots[1].BalanceKg)
+}
+
+func TestInventory_InvalidInput(t *testing.T) {
+	server := setupTestServer(t)
+	ctx := context.Background()
+
+	_, err := server.GetStockByProduct(ctx, &inventoryv1.GetStockByProductRequest{ProductId: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.GetLotDetails(ctx, &inventoryv1.GetLotDetailsRequest{LotId: "abc"})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	_, err = server.CreateLot(ctx, &inventoryv1.CreateLotRequest{
+		ProductId:      uuid.NewString(),
+		PurchaseItemId: uuid.NewString(),
+		Safra:          "2026",
+		QuantityKg:     "0",
+		ReceivedAt:     "2026-09-01",
+	})
+	assert.Equal(t, codes.InvalidArgument, status.Code(err))
+
+	resp, err := server.GetStockByProduct(ctx, &inventoryv1.GetStockByProductRequest{ProductId: uuid.NewString()})
+	require.NoError(t, err)
+	assert.Equal(t, "0", resp.TotalKg)
+	assert.Empty(t, resp.Lots)
 }
