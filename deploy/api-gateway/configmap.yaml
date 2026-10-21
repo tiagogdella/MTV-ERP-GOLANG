@@ -11,3 +11,4 @@ data:
   VIACEP_BASE_URL: "https://viacep.com.br"
   AUTH_SERVICE_ADDR: "auth-service:9090"
   PURCHASING_SERVICE_ADDR: "purchasing-service:9090"
+  INVENTORY_SERVICE_ADDR: "inventory-service:9090"

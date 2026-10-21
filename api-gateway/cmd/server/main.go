@@ -23,6 +23,7 @@ import (
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 	purchasingv1 "mtv-erp/api-gateway/internal/pb/purchasing/v1"
+	inventoryv1 "mtv-erp/api-gateway/internal/pb/inventory/v1"
 )
 
 func main() {
@@ -76,6 +77,14 @@ func main() {
 	defer purchasingConn.Close()
 	purchasingClient := purchasingv1.NewPurchasingServiceClient(purchasingConn)
 	
+	// Inventory con
+	inventoryConn, err := grpc.NewClient(cfg.InventoryServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		slog.Error("falha ao conectar com o inventory-service", "error", err)
+		os.Exit(1)
+	}
+	defer inventoryConn.Close()
+	inventoryClient := inventoryv1.NewInventoryServiceClient(inventoryConn)
 
 	viacepClient := viacep.NewClient(cfg.ViaCEPBaseURL, 5*time.Second)
 
@@ -106,6 +115,7 @@ func main() {
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", handlers.HandleGetProduct(catalogClient))
 					r.Patch("/", handlers.HandleDeactivateProduct(catalogClient))
+					r.Get("/stock", handlers.HandleGetProductStock(inventoryClient))				
 				})
 			})
 			r.Route("/suppliers", func(r chi.Router) {
@@ -116,6 +126,8 @@ func main() {
 					r.Patch("/", handlers.HandleDeactivateSupplier(catalogClient))
 				})
 			})
+			r.Get("/lots/{id}", handlers.HandleGetLotDetails(inventoryClient))
+			
 			r.Route("/units", func(r chi.Router) {
 				r.Get("/", handlers.HandleListUnits(catalogClient))
 				r.Post("/", handlers.HandleCreateUnit(catalogClient))

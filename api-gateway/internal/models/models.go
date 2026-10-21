@@ -114,3 +114,38 @@ type Purchase struct {
 	InvoiceValue  string         `json:"invoiceValue"`
 	Items         []PurchaseItem `json:"items"`
 }
+
+// Inventory
+type Lot struct {
+	ID             string `json:"id"`
+	ProductID      string `json:"productId"`
+	PurchaseItemID string `json:"purchaseItemId"`
+	Harvest        string `json:"harvest"`
+	QuantityKg     string `json:"quantityKg"`
+	ReceivedAt     string `json:"receivedAt"`
+}
+
+type LotStock struct {
+	Lot
+	BalanceKg string `json:"balanceKg"`
+}
+
+type ProductStock struct {
+	ProductID string     `json:"productId"`
+	TotalKg   string     `json:"totalKg"`
+	Lots      []LotStock `json:"lots"`
+}
+
+type StockMovement struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	QuantityKg string `json:"quantityKg"`
+	OccurredAt string `json:"occurredAt"`
+	Origin     string `json:"origin"`
+}
+
+type LotDetails struct {
+	Lot
+	BalanceKg string          `json:"balanceKg"`
+	Movements []StockMovement `json:"movements"`
+}
