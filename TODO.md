@@ -392,6 +392,7 @@ Serviços que ficam pra depois da apresentação, sem detalhamento de tarefas ai
 - **financial-service** — contas a pagar/receber, conciliação, vinculado a purchasing e sales
 - **fiscal-service** — emissão de NFe via Focus NFe (ou similar), vinculado a sales e financial
 - **notification-service** — notificações (email/whatsapp) de eventos de negócio (pedido aprovado, NFe emitida, etc.)
+- **assistant (chat com IA)** — *(ideia do usuário, 2026-10-21; decidido deixar por último)* um chat onde dá pra fazer pelo texto tudo que o sistema faz ("lança a compra da NF 123", "quanto tenho de parboilizado?"). Agente de IA com *tool use*: cada ferramenta é uma rota do api-gateway que já existe. Questões a decidir na hora: (1) **permissão** — usar o JWT do usuário logado, pra o `RequireRole` valer igual no chat; (2) **confirmação** antes de qualquer escrita (consulta roda direto, lançamento mostra resumo e pede "confirma?"); (3) onde mora — provável `assistant-service` novo falando com o gateway como qualquer cliente. Pré-requisitos que ajudam: OpenAPI/Swagger do gateway (vira a definição das ferramentas) e as mensagens de erro claras (o modelo usa pra se corrigir)
 
 ---
 
