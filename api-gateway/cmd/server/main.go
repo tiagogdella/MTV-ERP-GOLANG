@@ -22,6 +22,7 @@ import (
 	"mtv-erp/api-gateway/internal/metrics"
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
+	purchasingv1 "mtv-erp/api-gateway/internal/pb/purchasing/v1"
 )
 
 func main() {
@@ -65,6 +66,16 @@ func main() {
 	}
 	defer authConn.Close()
 	authClient := authv1.NewAuthServiceClient(authConn)
+
+	// Purchasing con.
+	purchasingConn, err := grpc.NewClient(cfg.PurchasingServiceAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		slog.Error("falha ao conectar com o purchasing-service", "error", err)
+		os.Exit(1)
+	}
+	defer purchasingConn.Close()
+	purchasingClient := purchasingv1.NewPurchasingServiceClient(purchasingConn)
+	
 
 	viacepClient := viacep.NewClient(cfg.ViaCEPBaseURL, 5*time.Second)
 
@@ -110,6 +121,7 @@ func main() {
 				r.Post("/", handlers.HandleCreateUnit(catalogClient))
 				r.Get("/{id}/conversion", handlers.HandleConvertUnit(catalogClient))
 			})
+			r.Post("/purchases", handlers.HandleCreatePurchase(purchasingClient))
 			r.Get("/addresses/{cep}", handlers.HandleGetAddress(viacepClient))
 		})	
 	})

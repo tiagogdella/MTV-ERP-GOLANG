@@ -10,3 +10,4 @@ data:
   CATALOG_SERVICE_ADDR: "catalog-service:9090"
   VIACEP_BASE_URL: "https://viacep.com.br"
   AUTH_SERVICE_ADDR: "auth-service:9090"
+  PURCHASING_SERVICE_ADDR: "purchasing-service:9090"

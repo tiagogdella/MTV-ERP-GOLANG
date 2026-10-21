@@ -12,15 +12,17 @@ type Config struct {
 	CatalogServiceAddr string
 	ViaCEPBaseURL      string
 	AuthServiceAddr    string
+	PurchasingServiceAddr string
 }
 
 func Load() (Config, error) {
 	cfg := Config{
-		Port:               getEnv("PORT", "8080"),
-		Environment:        getEnv("ENVIRONMENT", "local"),
-		CatalogServiceAddr: getEnv("CATALOG_SERVICE_ADDR", ""), // Sem default
-		ViaCEPBaseURL:      getEnv("VIACEP_BASE_URL", "https://viacep.com.br"),
-		AuthServiceAddr:     getEnv("AUTH_SERVICE_ADDR", ""),
+		Port:               	getEnv("PORT", "8080"),
+		Environment:        	getEnv("ENVIRONMENT", "local"),
+		CatalogServiceAddr: 	getEnv("CATALOG_SERVICE_ADDR", ""), // Sem default
+		ViaCEPBaseURL:      	getEnv("VIACEP_BASE_URL", "https://viacep.com.br"),
+		AuthServiceAddr:     	getEnv("AUTH_SERVICE_ADDR", ""),
+		PurchasingServiceAddr:  getEnv("PURCHASING_SERVICE_ADDR", ""),	
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -41,6 +43,10 @@ func (c Config) validate() error {
 	if c.AuthServiceAddr == "" {
 		return fmt.Errorf("AUTH_SERVICE_ADDR não pode ser vazio")
 	}
+	if c.PurchasingServiceAddr == "" {
+		return fmt.Errorf("PURCHASING_SERVICE_ADDR não pode ser vazio")
+	}
+
 	return nil
 }
 

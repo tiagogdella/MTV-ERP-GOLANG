@@ -80,3 +80,37 @@ type Conversion struct {
 	Quantity string `json:"quantity"`
 	Kg       string `json:"kg"`
 }
+
+// Purchasing
+type PurchaseItemInput struct {
+	ProductID string `json:"productId"`
+	UnitID    string `json:"unitId"`
+	Harvest   string `json:"harvest"`
+	Quantity  string `json:"quantity"`
+}
+
+type PurchaseInput struct {
+	SupplierID    string              `json:"supplierId"`
+	InvoiceNumber string              `json:"invoiceNumber"`
+	InvoiceDate   string              `json:"invoiceDate"`
+	InvoiceValue  string              `json:"invoiceValue"`
+	Items         []PurchaseItemInput `json:"items"`
+}
+
+type PurchaseItem struct {
+	ID        string `json:"id"`
+	ProductID string `json:"productId"`
+	UnitID    string `json:"unitId"`
+	Harvest   string `json:"harvest"`
+	Quantity  string `json:"quantity"`
+	LotID     string `json:"lotId"`
+}
+
+type Purchase struct {
+	ID            string         `json:"id"`
+	SupplierID    string         `json:"supplierId"`
+	InvoiceNumber string         `json:"invoiceNumber"`
+	InvoiceDate   string         `json:"invoiceDate"`
+	InvoiceValue  string         `json:"invoiceValue"`
+	Items         []PurchaseItem `json:"items"`
+}
