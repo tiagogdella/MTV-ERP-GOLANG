@@ -9,6 +9,15 @@ import (
 	catalogv1 "mtv-erp/api-gateway/internal/pb/catalog/v1"
 )
 
+// HandleListProducts godoc
+// @Summary Lista os produtos ativos
+// @Tags products
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.Product
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 503 {object} json.ErrorResponse
+// @Router /products [get]
 func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := catalogClient.ListProducts(r.Context(), &catalogv1.ListProductsRequest{})
@@ -31,6 +40,18 @@ func HandleListProducts(catalogClient catalogv1.CatalogServiceClient) http.Handl
 }
 
 // Itens 3.2/3.3
+
+// HandleGetProduct godoc
+// @Summary Busca um produto pelo ID
+// @Tags products
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do produto (UUID)"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Router /products/{id} [get]
 func HandleGetProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)
@@ -58,6 +79,19 @@ func HandleGetProduct(catalogClient catalogv1.CatalogServiceClient) http.Handler
 }
 
 // Itens 3.2/3.3
+
+// HandleCreateProduct godoc
+// @Summary Cadastra um produto
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param product body models.ProductInput true "Dados do produto"
+// @Success 201 {object} models.Product
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /products [post]
 func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.ProductInput
@@ -92,6 +126,21 @@ func HandleCreateProduct(catalogClient catalogv1.CatalogServiceClient) http.Hand
 	}
 }
 
+// HandleDeactivateProduct godoc
+// @Summary Desativa um produto (soft delete)
+// @Description Só aceita {"active": false}. Produto nunca é apagado (RF-CAT-2).
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do produto (UUID)"
+// @Param body body models.ProductPatchInput true "Sempre {\"active\": false}"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /products/{id} [patch]
 func HandleDeactivateProduct(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)

@@ -9,6 +9,17 @@ import (
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 )
 
+// HandleLogin godoc
+// @Summary Autentica e devolve um token JWT
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body models.LoginInput true "E-mail e senha"
+// @Success 200 {object} models.LoginOutput
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /auth/login [post]
 func HandleLogin(authClient authv1.AuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.LoginInput

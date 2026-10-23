@@ -1,4 +1,4 @@
-.PHONY: build run test lint
+.PHONY: build run test lint swagger
 
 build:
 		go build -o bin/server ./cmd/server
@@ -11,3 +11,6 @@ test:
 
 lint:
 		go vet ./...
+		
+swagger:
+		swag init -g cmd/server/main.go -o docs

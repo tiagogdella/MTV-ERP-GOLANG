@@ -10,6 +10,21 @@ import (
 	purchasingv1 "mtv-erp/api-gateway/internal/pb/purchasing/v1"
 )
 
+// HandleCreatePurchase godoc
+// @Summary Lança uma compra (nota fiscal + itens) e cria um lote por item
+// @Description Fornecedor, produto ou unidade inexistente → 422. Nota fiscal repetida pro mesmo fornecedor → 409.
+// @Tags purchases
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param purchase body models.PurchaseInput true "Cabeçalho da nota e lista de itens"
+// @Success 201 {object} models.Purchase
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 409 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Failure 503 {object} json.ErrorResponse
+// @Router /purchases [post]
 func HandleCreatePurchase(purchasingClient purchasingv1.PurchasingServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.PurchaseInput

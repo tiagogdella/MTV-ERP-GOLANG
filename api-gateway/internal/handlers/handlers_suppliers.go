@@ -19,6 +19,14 @@ func toSupplierDTO(s *catalogv1.Supplier) models.Supplier {
 	}
 }
 
+// HandleListSuppliers godoc
+// @Summary Lista os fornecedores ativos
+// @Tags suppliers
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} models.Supplier
+// @Failure 401 {object} json.ErrorResponse
+// @Router /suppliers [get]
 func HandleListSuppliers(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp, err := catalogClient.ListSuppliers(r.Context(), &catalogv1.ListSuppliersRequest{})
@@ -36,6 +44,17 @@ func HandleListSuppliers(catalogClient catalogv1.CatalogServiceClient) http.Hand
 	}
 }
 
+// HandleGetSupplier godoc
+// @Summary Busca um fornecedor pelo ID
+// @Tags suppliers
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do fornecedor (UUID)"
+// @Success 200 {object} models.Supplier
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Router /suppliers/{id} [get]
 func HandleGetSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)
@@ -55,6 +74,18 @@ func HandleGetSupplier(catalogClient catalogv1.CatalogServiceClient) http.Handle
 	}
 }
 
+// HandleCreateSupplier godoc
+// @Summary Cadastra um fornecedor
+// @Tags suppliers
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param supplier body models.SupplierInput true "Dados do fornecedor"
+// @Success 201 {object} models.Supplier
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /suppliers [post]
 func HandleCreateSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.SupplierInput
@@ -82,6 +113,20 @@ func HandleCreateSupplier(catalogClient catalogv1.CatalogServiceClient) http.Han
 	}
 }
 
+// HandleDeactivateSupplier godoc
+// @Summary Desativa um fornecedor (soft delete)
+// @Tags suppliers
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do fornecedor (UUID)"
+// @Param body body models.SupplierPatchInput true "Sempre {\"active\": false}"
+// @Success 200 {object} models.Supplier
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /suppliers/{id} [patch]
 func HandleDeactivateSupplier(catalogClient catalogv1.CatalogServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)

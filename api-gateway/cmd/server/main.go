@@ -24,8 +24,18 @@ import (
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 	purchasingv1 "mtv-erp/api-gateway/internal/pb/purchasing/v1"
 	inventoryv1 "mtv-erp/api-gateway/internal/pb/inventory/v1"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
+	_ "mtv-erp/api-gateway/docs"
 )
 
+// @title MTV ERP API
+// @version 1.0
+// @description API REST do ERP de arroz. Porta de entrada pros serviços de catálogo, compras, estoque e autenticação.
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Use o formato: Bearer <token>
 func main() {
 	// Criando Logger que escreve em JSON
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -100,6 +110,7 @@ func main() {
 	r.Get("/healthz", health.LivenessHandler)
 	r.Get("/readyz", health.ReadinessHandler)
 	r.Handle("/metrics", promhttp.Handler())
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
 
 	// Routes
 	r.Route("/api/v1", func(r chi.Router) {

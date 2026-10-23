@@ -1,0 +1,832 @@
+basePath: /api/v1
+definitions:
+  json.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  models.Address:
+    properties:
+      cep:
+        type: string
+      city:
+        type: string
+      neighborhood:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
+    type: object
+  models.Conversion:
+    properties:
+      kg:
+        type: string
+      quantity:
+        type: string
+      unitId:
+        type: string
+    type: object
+  models.LoginInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  models.LoginOutput:
+    properties:
+      token:
+        type: string
+    type: object
+  models.LotDetails:
+    properties:
+      balanceKg:
+        type: string
+      harvest:
+        type: string
+      id:
+        type: string
+      movements:
+        items:
+          $ref: '#/definitions/models.StockMovement'
+        type: array
+      productId:
+        type: string
+      purchaseItemId:
+        type: string
+      quantityKg:
+        type: string
+      receivedAt:
+        type: string
+    type: object
+  models.LotStock:
+    properties:
+      balanceKg:
+        type: string
+      harvest:
+        type: string
+      id:
+        type: string
+      productId:
+        type: string
+      purchaseItemId:
+        type: string
+      quantityKg:
+        type: string
+      receivedAt:
+        type: string
+    type: object
+  models.Product:
+    properties:
+      active:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.ProductInput:
+    properties:
+      name:
+        type: string
+    type: object
+  models.ProductPatchInput:
+    properties:
+      active:
+        type: boolean
+    type: object
+  models.ProductStock:
+    properties:
+      lots:
+        items:
+          $ref: '#/definitions/models.LotStock'
+        type: array
+      productId:
+        type: string
+      totalKg:
+        type: string
+    type: object
+  models.Purchase:
+    properties:
+      id:
+        type: string
+      invoiceDate:
+        type: string
+      invoiceNumber:
+        type: string
+      invoiceValue:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.PurchaseItem'
+        type: array
+      supplierId:
+        type: string
+    type: object
+  models.PurchaseInput:
+    properties:
+      invoiceDate:
+        type: string
+      invoiceNumber:
+        type: string
+      invoiceValue:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.PurchaseItemInput'
+        type: array
+      supplierId:
+        type: string
+    type: object
+  models.PurchaseItem:
+    properties:
+      harvest:
+        type: string
+      id:
+        type: string
+      lotId:
+        type: string
+      productId:
+        type: string
+      quantity:
+        type: string
+      unitId:
+        type: string
+    type: object
+  models.PurchaseItemInput:
+    properties:
+      harvest:
+        type: string
+      productId:
+        type: string
+      quantity:
+        type: string
+      unitId:
+        type: string
+    type: object
+  models.StockMovement:
+    properties:
+      id:
+        type: string
+      occurredAt:
+        type: string
+      origin:
+        type: string
+      quantityKg:
+        type: string
+      type:
+        type: string
+    type: object
+  models.Supplier:
+    properties:
+      active:
+        type: boolean
+      address:
+        type: string
+      document:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.SupplierInput:
+    properties:
+      address:
+        type: string
+      document:
+        type: string
+      name:
+        type: string
+    type: object
+  models.SupplierPatchInput:
+    properties:
+      active:
+        type: boolean
+    type: object
+  models.Unit:
+    properties:
+      conversionFactorKg:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  models.UnitInput:
+    properties:
+      conversionFactorKg:
+        type: string
+      name:
+        type: string
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+    type: object
+  models.UserInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API REST do ERP de arroz. Porta de entrada pros serviços de catálogo,
+    compras, estoque e autenticação.
+  title: MTV ERP API
+  version: "1.0"
+paths:
+  /addresses/{cep}:
+    get:
+      parameters:
+      - description: CEP com 8 dígitos, com ou sem hífen
+        in: path
+        name: cep
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Address'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "504":
+          description: Gateway Timeout
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Consulta um endereço pelo CEP (ViaCEP)
+      tags:
+      - addresses
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: E-mail e senha
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginOutput'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      summary: Autentica e devolve um token JWT
+      tags:
+      - auth
+  /lots/{id}:
+    get:
+      parameters:
+      - description: ID do lote (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LotDetails'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 'Rastreabilidade de um lote: dados, saldo e todas as movimentações'
+      tags:
+      - stock
+  /products:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Product'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista os produtos ativos
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do produto
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cadastra um produto
+      tags:
+      - products
+  /products/{id}:
+    get:
+      parameters:
+      - description: ID do produto (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Busca um produto pelo ID
+      tags:
+      - products
+    patch:
+      consumes:
+      - application/json
+      description: 'Só aceita {"active": false}. Produto nunca é apagado (RF-CAT-2).'
+      parameters:
+      - description: ID do produto (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sempre {\
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductPatchInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Desativa um produto (soft delete)
+      tags:
+      - products
+  /products/{id}/stock:
+    get:
+      parameters:
+      - description: ID do produto (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductStock'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Estoque de um produto, com o saldo de cada lote
+      tags:
+      - stock
+  /purchases:
+    post:
+      consumes:
+      - application/json
+      description: Fornecedor, produto ou unidade inexistente → 422. Nota fiscal repetida
+        pro mesmo fornecedor → 409.
+      parameters:
+      - description: Cabeçalho da nota e lista de itens
+        in: body
+        name: purchase
+        required: true
+        schema:
+          $ref: '#/definitions/models.PurchaseInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Purchase'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Lança uma compra (nota fiscal + itens) e cria um lote por item
+      tags:
+      - purchases
+  /suppliers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Supplier'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista os fornecedores ativos
+      tags:
+      - suppliers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Dados do fornecedor
+        in: body
+        name: supplier
+        required: true
+        schema:
+          $ref: '#/definitions/models.SupplierInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Supplier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cadastra um fornecedor
+      tags:
+      - suppliers
+  /suppliers/{id}:
+    get:
+      parameters:
+      - description: ID do fornecedor (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Supplier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Busca um fornecedor pelo ID
+      tags:
+      - suppliers
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID do fornecedor (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sempre {\
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.SupplierPatchInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Supplier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Desativa um fornecedor (soft delete)
+      tags:
+      - suppliers
+  /units:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Unit'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Lista as unidades de comercialização
+      tags:
+      - units
+    post:
+      consumes:
+      - application/json
+      description: O fator é travado depois de criado (RF-CAT-6). Máximo 4 casas decimais,
+        maior que zero.
+      parameters:
+      - description: 'Nome e fator de conversão pra kg (como texto, ex: \'
+        in: body
+        name: unit
+        required: true
+        schema:
+          $ref: '#/definitions/models.UnitInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Unit'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cadastra uma unidade de comercialização
+      tags:
+      - units
+  /units/{id}/conversion:
+    get:
+      parameters:
+      - description: ID da unidade (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Quantidade na unidade (ex: 10)'
+        in: query
+        name: quantity
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Conversion'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Converte uma quantidade da unidade para kg
+      tags:
+      - units
+  /users:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: E-mail, senha e papel (admin ou operador)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/json.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cadastra um usuário (somente admin)
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: 'Use o formato: Bearer <token>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -17,6 +17,19 @@ type AddressLookup interface {
 	Lookup(ctx context.Context, cep string) (*viacep.Address, error)
 }
 
+// HandleGetAddress godoc
+// @Summary Consulta um endereço pelo CEP (ViaCEP)
+// @Tags addresses
+// @Produce json
+// @Security BearerAuth
+// @Param cep path string true "CEP com 8 dígitos, com ou sem hífen"
+// @Success 200 {object} models.Address
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Failure 502 {object} json.ErrorResponse
+// @Failure 504 {object} json.ErrorResponse
+// @Router /addresses/{cep} [get]
 func HandleGetAddress(lookup AddressLookup) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cep := chi.URLParam(r, "cep")

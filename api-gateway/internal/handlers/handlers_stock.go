@@ -19,6 +19,16 @@ func toLotDTO(l *inventoryv1.Lot) models.Lot {
 	}
 }
 
+// HandleGetProductStock godoc
+// @Summary Estoque de um produto, com o saldo de cada lote
+// @Tags stock
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do produto (UUID)"
+// @Success 200 {object} models.ProductStock
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Router /products/{id}/stock [get]
 func HandleGetProductStock(inventoryClient inventoryv1.InventoryServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)
@@ -49,6 +59,17 @@ func HandleGetProductStock(inventoryClient inventoryv1.InventoryServiceClient) h
 	}
 }
 
+// HandleGetLotDetails godoc
+// @Summary Rastreabilidade de um lote: dados, saldo e todas as movimentações
+// @Tags stock
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID do lote (UUID)"
+// @Success 200 {object} models.LotDetails
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 404 {object} json.ErrorResponse
+// @Router /lots/{id} [get]
 func HandleGetLotDetails(inventoryClient inventoryv1.InventoryServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := json.ParseID(r)

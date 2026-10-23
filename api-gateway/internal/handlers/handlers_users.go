@@ -9,6 +9,20 @@ import (
 	authv1 "mtv-erp/api-gateway/internal/pb/auth/v1"
 )
 
+// HandleCreateUser godoc
+// @Summary Cadastra um usuário (somente admin)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param user body models.UserInput true "E-mail, senha e papel (admin ou operador)"
+// @Success 201 {object} models.User
+// @Failure 400 {object} json.ErrorResponse
+// @Failure 401 {object} json.ErrorResponse
+// @Failure 403 {object} json.ErrorResponse
+// @Failure 409 {object} json.ErrorResponse
+// @Failure 422 {object} json.ErrorResponse
+// @Router /users [post]
 func HandleCreateUser(authClient authv1.AuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in models.UserInput
