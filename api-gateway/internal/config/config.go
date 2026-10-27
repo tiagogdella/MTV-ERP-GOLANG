@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Struct
@@ -14,7 +15,7 @@ type Config struct {
 	AuthServiceAddr    		string
 	PurchasingServiceAddr 	string
 	InventoryServiceAddr 	string
-
+	CORSAllowedOrigins []string
 }
 
 func Load() (Config, error) {
@@ -26,6 +27,7 @@ func Load() (Config, error) {
 		AuthServiceAddr:     	getEnv("AUTH_SERVICE_ADDR", ""),
 		PurchasingServiceAddr:  getEnv("PURCHASING_SERVICE_ADDR", ""),	
 		InventoryServiceAddr: 	getEnv("INVENTORY_SERVICE_ADDR", ""),	
+		CORSAllowedOrigins: splitCSV(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")),	
 	}
 
 	if err := cfg.validate(); err != nil {
@@ -63,4 +65,15 @@ func getEnv(key, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

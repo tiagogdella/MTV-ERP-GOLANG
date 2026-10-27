@@ -12,6 +12,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"github.com/go-chi/cors"
 
 	"mtv-erp/api-gateway/internal/clients/viacep"
 	"mtv-erp/api-gateway/internal/config"
@@ -104,6 +105,12 @@ func main() {
 	r.Use(middleware.Recoverer) // (um panic vira 500 em vez de derrubar o processo)
 	r.Use(middleware.RequestID) // Cria um ID para Reqs
 	r.Use(metrics.Middleware)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: cfg.CORSAllowedOrigins,
+		AllowedMethods: []string{"GET", "POST", "PATCH", "OPTIONS"},
+		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		MaxAge:         300,
+	}))
 	r.Use(middleware.Timeout(10 * time.Second)) // Timer
 	r.Use(middleware.AllowContentType("application/json")) // Filtra apenas JSON com 415
 
