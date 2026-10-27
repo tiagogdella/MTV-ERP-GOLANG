@@ -96,3 +96,15 @@ Usando `service-template` como exemplo — o mesmo fluxo vale pra qualquer servi
 
 - O cluster já roda um sistema em produção de verdade, no namespace `comprassularroz` — **nunca mexer nesse namespace** (isso inclui o `Secret` `ghcr-secret` de lá, que é de outro projeto — o nosso é o do namespace `mtv-erp`, criado à parte). Nosso projeto vive isolado no namespace `mtv-erp`.
 - Segredos (senha de banco, token do ghcr.io, etc.) nunca vão em arquivo `.yaml` commitado — sempre `kubectl create secret ... --from-literal=...` ou `kubectl create secret docker-registry ...`, direto no cluster.
+- **Ingress:** o sistema de produção (`comprassularroz`) tem um Ingress **sem host** e com `path: /` — ele captura qualquer requisição que chega na porta 80 do servidor. Todo Ingress nosso **precisa ter `host:` próprio** (nunca deixar sem host, nunca `*`), senão disputa o tráfego com o sistema da empresa. O Traefik dá prioridade à regra mais específica (host + caminho ganha de só caminho). Antes de aplicar um Ingress novo: `kubectl apply --dry-run=server -f ...` e fotografar o sistema deles (`curl -s -o /dev/null -w "%{http_code} %{size_download}\n" http://192.168.1.44/`), aplicar só o arquivo do Ingress, e conferir que o número não mudou. Reversão: `kubectl delete -f <arquivo-do-ingress>`.
+
+## Acesso ao gateway
+
+Desde 2026-10-27 o api-gateway tem URL fixa via Ingress (Traefik do k3s), sem precisar de `port-forward`:
+
+- API: `http://api.192.168.1.44.nip.io/api/v1/...`
+- Swagger: `http://api.192.168.1.44.nip.io/swagger/index.html`
+
+O `nip.io` é um DNS público que resolve `<qualquer-coisa>.<IP>.nip.io` pro próprio IP do nome — funciona em qualquer máquina da rede da empresa sem editar `/etc/hosts`, mas precisa de internet pra resolver o nome. Diferente do `port-forward` (túnel até **um pod**), o Ingress aponta pro **Service**, então continua funcionando depois de `rollout restart`. O `port-forward` continua útil pros serviços internos sem Ingress (bancos, auth/catalog via `grpcurl`).
+
+Sem HTTPS ainda (só porta 80) — o token JWT trafega em texto aberto na rede local. Aceitável no MVP dentro da rede da empresa; HTTPS no Ingress é item da Fase 7 (revisão de segurança).
