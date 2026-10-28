@@ -1,28 +1,31 @@
 <script setup lang="ts">
 const config = useRuntimeConfig()
 
+const auth = useAuthStore()
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
 
 async function submit() {
-  errorMessage.value = ''
-  loading.value = true
+    errorMessage.value = ''
+    loading.value = true
 
-  try {
-    const resp = await $fetch<{ token: string }>('/auth/login', {
-      baseURL: config.public.apiBase,
-      method: 'POST',
-      body: { email: email.value, password: password.value },
-    })
-    console.log('token recebido:', resp.token.slice(0, 20) + '...')
-  } catch (e) {
-    const err = e as { data?: { error?: string } }
-    errorMessage.value = err.data?.error ?? 'Não foi possível conectar ao servidor'
-  } finally {
-    loading.value = false
-  }
+    try {
+            const resp = await $fetch<{ token: string }>('/auth/login', {
+                baseURL: config.public.apiBase,
+                method: 'POST',
+                body: { email: email.value, password: password.value },
+            })
+            auth.setToken(resp.token)
+            await navigateTo('/')
+
+        } catch (e) {
+            const err = e as { data?: { error?: string } }
+            errorMessage.value = err.data?.error ?? 'Não foi possível conectar ao servidor'
+        } finally {
+            loading.value = false
+        }
 }
 </script>
 
