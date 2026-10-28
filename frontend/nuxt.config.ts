@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import Aura from '@primeuix/themes/aura'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -7,5 +8,13 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [tailwindcss()],
+  },
+  modules: ['@primevue/nuxt-module'],
+  primevue: {
+    options: {
+      theme: {
+        preset: Aura,
+      },
+    },
   },
 })
