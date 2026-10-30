@@ -8,11 +8,8 @@ async function logout() {
 </script>
 
 <template>
-  <div class="p-8">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-emerald-700">MTV ERP</h1>
-      <Button label="Sair" severity="secondary" text @click="logout" />
-    </div>
-    <NuxtLink to="/products" class="mt-4 inline-block text-emerald-700 underline">Produtos</NuxtLink>  
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Bem-vindo</h1>
+    <p class="mt-2 text-gray-600">Use o menu ao lado para navegar.</p>
   </div>
 </template>

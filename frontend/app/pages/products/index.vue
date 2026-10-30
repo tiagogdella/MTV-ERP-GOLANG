@@ -23,10 +23,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-8">
+  <div>
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold text-emerald-700">Produtos</h1>
-      <NuxtLink to="/" class="text-emerald-700 underline">Voltar</NuxtLink>
     </div>
 
     <Message v-if="errorMessage" severity="error" class="mb-4">{{ errorMessage }}</Message>
