@@ -14,6 +14,8 @@ async function logout() {
 
 <template>
   <div class="min-h-screen flex bg-gray-50">
+    <Toast />
+    <ConfirmDialog />
     <aside class="w-56 bg-white border-r border-gray-200 flex flex-col">
       <div class="p-4 border-b border-gray-200">
         <span class="text-lg font-bold text-emerald-700">MTV ERP</span>
