@@ -303,17 +303,23 @@ Convenções:
   *(feito em 2026-09-30 — `deploy/api-gateway/` copiado do purchasing-service, bem enxugado: sem `secret.yaml` (gateway não tem banco), Deployment/Service com **uma porta só** (`http`, sem `grpc`). NodePort de métricas `30084`. Achado no caminho: `service-metrics.yaml` acabou ficando com o mesmo conteúdo do `service.yaml` (mesmo `name: api-gateway`, sem NodePort) — o `kubectl apply` da pasta viu os dois arquivos definindo "o mesmo" recurso e só criou um, faltando o Service de métricas. Corrigido restaurando o `name: api-gateway-metrics` + `type: NodePort`. `GET /api/v1/products` confirmado via `curl` contra o pod real: 200, JSON com os 5 produtos do catalog-service, campos em inglês certos. Falta o Ingress (só dá pra acessar via port-forward por enquanto, não tem URL externa de verdade ainda) — Fase 8 do TODO já previa isso)*
 
 ### Fundação do frontend
-- [ ] Decidir entre PrimeVue e Naive UI (avaliar componentes de tabela/formulário disponíveis, tamanho do bundle)
-- [ ] Criar projeto Nuxt 3 (`frontend/`)
-- [ ] Configurar Tailwind CSS no projeto
-- [ ] Configurar Pinia (store de auth com token JWT)
+- [x] Decidir entre PrimeVue e Naive UI (avaliar componentes de tabela/formulário disponíveis, tamanho do bundle)
+  *(decidido em 2026-10-27: PrimeVue, pelo conjunto mais completo pra formulário de negócio e `DataTable`. **Achado em 2026-10-28:** PrimeVue **5.0.0+ (2026-07-15) deixou de ser MIT** — virou "PrimeUI License" comercial com chave (sem ela, faixa vermelha "Invalid PrimeUI license" na tela, e os termos proíbem esconder). Tier gratuito só pra organizações < US$1M/ano, < 10 funcionários, < 5 devs — depende da MTV, não do estudante. Decisão: fixar a **4.5.5 (MIT)** com `--save-exact` (`primevue@4.5.5`, `@primevue/nuxt-module@4.5.5`, `@primeuix/themes@2.0.3`), mesma API e tema Aura, testado com Nuxt 4. Lição: conferir licença de dependência antes de instalar — o build não quebra quando a licença muda)*
+- [x] Criar projeto Nuxt ~~3~~ **4** (`frontend/`)
+  *(feito em 2026-10-27 — Nuxt 4.6 (a 3 virou versão de saída), template `minimal`, código em `app/`. Pegadinha: o `create nuxt` cria um `.git` dentro de `frontend/` mesmo com `--gitInit false` — repositório dentro de repositório; responder "No" e conferir com `ls -a frontend`)*
+- [x] Configurar Tailwind CSS no projeto
+  *(Tailwind 4 via `@tailwindcss/vite` — o módulo `@nuxtjs/tailwindcss` que os tutoriais citam ainda é Tailwind 3)*
+- [x] Configurar Pinia (store de auth com token JWT)
+  *(feito em 2026-10-28 — `pinia@4.1.0` + `@pinia/nuxt@1.0.3` fixos. Decisão: **SPA** (`ssr: false`) — ERP interno atrás de login não precisa de SEO, e o token no `localStorage` só existe no navegador; deploy vira arquivos estáticos, sem servidor Node no cluster. `stores/auth.ts` (token em memória + `localStorage`, `isLoggedIn` com `computed`), `middleware/auth.global.ts` (sem token → `/login`; com token no `/login` → `/`) — é conforto, não segurança: quem protege é o `RequireAuth` do gateway. `composables/useApi.ts`: `$fetch.create` com `baseURL` do `runtimeConfig.public.apiBase` (sobrescrevível por `NUXT_PUBLIC_API_BASE`), `onRequest` põe o `Authorization: Bearer`, `onResponseError` com 401 (token expirado) faz logout + vai pro login. O login usa `$fetch` puro de propósito: lá 401 é "senha errada", não "sessão expirada")*
 - [ ] Configurar TanStack Query pra Vue (client de dados apontando pro api-gateway)
 - [ ] Configurar VeeValidate + Zod (schema de validação de formulário compartilhado)
   📚 Estudar: VeeValidate + Zod — como conectar schema Zod ao form do VeeValidate pra validação tipada
 
 ### Telas mínimas do MVP
-- [ ] Tela de login (consome auth-service via gateway)
-- [ ] Tela de listagem/cadastro de produtos e unidades de medida (catalog)
+- [x] Tela de login (consome auth-service via gateway)
+  *(feita em 2026-10-28 — `pages/login.vue`, PrimeVue `InputText`/`Password`/`Button`/`Message`, erro lido sempre de `e.data.error` (o formato `{"error": ...}` padronizado do gateway se pagando), fallback pra quando nem houve resposta (gateway fora ou CORS). Validado no navegador: preflight `OPTIONS` + `POST` na primeira tentativa, só `POST` na segunda — `Access-Control-Max-Age: 300` funcionando)*
+- [~] Tela de listagem/cadastro de produtos e unidades de medida (catalog)
+  *(listagem de produtos feita em 2026-10-30 — `pages/products/index.vue` com `DataTable` (ordenação por coluna sem código), `Tag` na coluna "Ativo" via template `#body`. Testado: header `Authorization` presente na requisição; token adulterado no `localStorage` → 401 → volta pro login sozinho. Falta: cadastro e desativação de produto, tela de unidades)*
 - [ ] Tela de consulta de estoque por produto/lote, incluindo rastreabilidade (inventory)
 - [ ] Tela de lançamento de compra — passo único (purchasing, ver RF-PUR-1)
 - [ ] Deploy do frontend (build estático ou SSR no k8s, conforme decisão de infra)

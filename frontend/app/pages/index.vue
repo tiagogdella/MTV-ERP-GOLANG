@@ -13,6 +13,6 @@ async function logout() {
       <h1 class="text-2xl font-bold text-emerald-700">MTV ERP</h1>
       <Button label="Sair" severity="secondary" text @click="logout" />
     </div>
-    <p class="mt-2 text-gray-600">Você está logado.</p>
+    <NuxtLink to="/products" class="mt-4 inline-block text-emerald-700 underline">Produtos</NuxtLink>  
   </div>
 </template>
