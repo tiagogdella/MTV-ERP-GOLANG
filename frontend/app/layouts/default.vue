@@ -4,6 +4,8 @@ const auth = useAuthStore()
 const links = [
   { to: '/', label: 'Início' },
   { to: '/products', label: 'Produtos' },
+  { to: '/stock', label: 'Estoque' }, 
+  { to: '/purchases/new', label: 'Nova compra' }, 
 ]
 
 async function logout() {
