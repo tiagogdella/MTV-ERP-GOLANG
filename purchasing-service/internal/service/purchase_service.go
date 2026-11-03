@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,6 +16,11 @@ import (
 	"mtv-erp/purchasing-service/internal/db"
 	catalogv1 "mtv-erp/purchasing-service/internal/pb/catalog/v1"
 	inventoryv1 "mtv-erp/purchasing-service/internal/pb/inventory/v1"
+)
+
+var (
+	invoiceNumberPattern = regexp.MustCompile(`^\d{1,9}$`)
+	harvestPattern       = regexp.MustCompile(`^(0[1-9]|1[0-2])/\d{4}$`)
 )
 
 type PurchaseService struct {
@@ -147,9 +153,15 @@ func validatePurchaseInput(in CreatePurchaseInput) error {
 	if len(in.Items) == 0 {
 		return status.Error(codes.InvalidArgument, "a compra precisa de pelo menos um item")
 	}
+	if !invoiceNumberPattern.MatchString(in.InvoiceNumber) {
+		return status.Error(codes.InvalidArgument, "número da nota fiscal deve ter só dígitos (até 9)")
+	}
 	for i, item := range in.Items {
 		if strings.TrimSpace(item.Safra) == "" {
 			return status.Errorf(codes.InvalidArgument, "item %d: safra é obrigatória", i+1)
+		}
+		if !harvestPattern.MatchString(item.Safra) {
+			return status.Errorf(codes.InvalidArgument, "item %d: safra deve estar no formato MM/AAAA (ex.: 11/2026)", i+1)
 		}
 		if !item.Quantity.IsPositive() {
 			return status.Errorf(codes.InvalidArgument, "item %d: quantidade deve ser maior que zero", i+1)

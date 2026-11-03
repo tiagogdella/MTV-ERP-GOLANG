@@ -86,14 +86,14 @@ func TestCreatePurchase_Success(t *testing.T) {
 
 	input := CreatePurchaseInput{
 		SupplierID:    supplierID,
-		InvoiceNumber: "NF-001",
+		InvoiceNumber: "001",
 		InvoiceDate:   time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC),
 		InvoiceValue:  decimal.NewFromInt(1000),
 		Items: []CreatePurchaseItemInput{
 			{
 				ProductID: productID,
 				UnitID:    unitID,
-				Safra:     "2026",
+				Safra:     "11/2026",
 				Quantity:  decimal.NewFromInt(10),
 			},
 		},
@@ -103,7 +103,7 @@ func TestCreatePurchase_Success(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, result.Purchase.ID)
-	assert.Equal(t, "NF-001", result.Purchase.InvoiceNumber)
+	assert.Equal(t, "001", result.Purchase.InvoiceNumber)
 	require.Len(t, result.Items, 1)
 	assert.Equal(t, lotID, result.Items[0].LotID)
 	assert.NotEmpty(t, result.Items[0].Item.ID)
@@ -123,11 +123,11 @@ func TestCreatePurchase_SupplierNotFound(t *testing.T) {
 
 	_, err := svc.CreatePurchase(ctx, CreatePurchaseInput{
 		SupplierID:    "supplier-inexistente",
-		InvoiceNumber: "NF-002",
+		InvoiceNumber: "002",
 		InvoiceDate:   time.Now(),
 		InvoiceValue:  decimal.NewFromInt(500),
 		Items: []CreatePurchaseItemInput{
-			{ProductID: "product-1", UnitID: "unit-1", Safra: "2026", Quantity: decimal.NewFromInt(5)},
+			{ProductID: "product-1", UnitID: "unit-1", Safra: "11/2026", Quantity: decimal.NewFromInt(5)},
 		},
 	})
 
@@ -138,9 +138,9 @@ func TestCreatePurchase_SupplierNotFound(t *testing.T) {
 func TestValidatePurchaseInput(t *testing.T) {
 	valid := func() CreatePurchaseInput {
 		return CreatePurchaseInput{
-			InvoiceNumber: "NF-1",
+			InvoiceNumber: "1",
 			InvoiceValue:  decimal.NewFromInt(100),
-			Items:         []CreatePurchaseItemInput{{Safra: "2026", Quantity: decimal.NewFromInt(1)}},
+			Items:         []CreatePurchaseItemInput{{Safra: "11/2026", Quantity: decimal.NewFromInt(1)}},
 		}
 	}
 
@@ -151,9 +151,16 @@ func TestValidatePurchaseInput(t *testing.T) {
 	}{
 		{"compra válida", func(in *CreatePurchaseInput) {}, codes.OK},
 		{"sem número da nota", func(in *CreatePurchaseInput) { in.InvoiceNumber = "  " }, codes.InvalidArgument},
+		{"número da nota com zeros à esquerda", func(in *CreatePurchaseInput) { in.InvoiceNumber = "000123" }, codes.OK},
+		{"número da nota com letras", func(in *CreatePurchaseInput) { in.InvoiceNumber = "nf-1" }, codes.InvalidArgument},
+		{"número da nota com 10 dígitos", func(in *CreatePurchaseInput) { in.InvoiceNumber = "1234567890" }, codes.InvalidArgument},
+		{"número da nota entre aspas", func(in *CreatePurchaseInput) { in.InvoiceNumber = `" "` }, codes.InvalidArgument},		
 		{"valor zero", func(in *CreatePurchaseInput) { in.InvoiceValue = decimal.Zero }, codes.InvalidArgument},
 		{"sem itens", func(in *CreatePurchaseInput) { in.Items = nil }, codes.InvalidArgument},
 		{"item sem safra", func(in *CreatePurchaseInput) { in.Items[0].Safra = "" }, codes.InvalidArgument},
+		{"safra com ano de 2 dígitos", func(in *CreatePurchaseInput) { in.Items[0].Safra = "11/26" }, codes.InvalidArgument},
+		{"safra sem zero no mês", func(in *CreatePurchaseInput) { in.Items[0].Safra = "1/2026" }, codes.InvalidArgument},
+		{"safra com mês 13", func(in *CreatePurchaseInput) { in.Items[0].Safra = "13/2026" }, codes.InvalidArgument},		
 		{"item com quantidade negativa", func(in *CreatePurchaseInput) { in.Items[0].Quantity = decimal.NewFromInt(-1) }, codes.InvalidArgument},
 	}
 
@@ -178,12 +185,12 @@ func TestCreatePurchase_NonExistentProduct(t *testing.T) {
 
 	_, err := svc.CreatePurchase(ctx, CreatePurchaseInput{
 		SupplierID:    "s",
-		InvoiceNumber: "NF-3",
+		InvoiceNumber: "3",
 		InvoiceDate:   time.Now(),
 		InvoiceValue:  decimal.NewFromInt(500),
 		Items: []CreatePurchaseItemInput{
-			{ProductID: "p", UnitID: "u", Safra: "2026", Quantity: decimal.NewFromInt(10)},
-			{ProductID: "x", UnitID: "u", Safra: "2026", Quantity: decimal.NewFromInt(5)},
+			{ProductID: "p", UnitID: "u", Safra: "11/2026", Quantity: decimal.NewFromInt(10)},
+			{ProductID: "x", UnitID: "u", Safra: "11/2026", Quantity: decimal.NewFromInt(5)},
 		},
 	})
 
