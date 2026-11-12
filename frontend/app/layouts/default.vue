@@ -5,7 +5,8 @@ const links = [
   { to: '/', label: 'Início' },
   { to: '/products', label: 'Produtos' },
   { to: '/stock', label: 'Estoque' }, 
-  { to: '/purchases/new', label: 'Nova compra' }, 
+  { to: '/purchases/new', label: 'Nova compra' },
+  { to: '/units', label: 'Unidades' }, 
 ]
 
 async function logout() {
