@@ -102,8 +102,17 @@ Usando `service-template` como exemplo — o mesmo fluxo vale pra qualquer servi
 
 Desde 2026-10-27 o api-gateway tem URL fixa via Ingress (Traefik do k3s), sem precisar de `port-forward`:
 
+- Sistema (frontend): `http://app.192.168.1.44.nip.io` (desde 2026-11-12)
 - API: `http://api.192.168.1.44.nip.io/api/v1/...`
 - Swagger: `http://api.192.168.1.44.nip.io/swagger/index.html`
+
+### Frontend
+
+Build estático (SPA) servido por nginx não-root, imagem `ghcr.io/tiagogdella/frontend`. Deploy na pasta `frontend/`, mesmo fluxo dos serviços Go (`docker build ... -t ghcr.io/tiagogdella/frontend:latest .`, `docker push`, `kubectl rollout restart deployment/frontend -n mtv-erp`). Manifests: `kubectl apply -f deploy/frontend/deployment.yaml -f deploy/frontend/service.yaml -f deploy/frontend/ingress.yaml`.
+
+- O endereço da API (`runtimeConfig.public.apiBase` no `nuxt.config.ts`) é **gravado nos arquivos no build** — não existe servidor lendo variável de ambiente em produção. Mudou o endereço do gateway → gerar e publicar a imagem de novo.
+- Toda origem nova do frontend (outro host, outra porta) precisa entrar no `CORS_ALLOWED_ORIGINS` do `deploy/api-gateway/configmap.yaml`, separada por vírgula, seguida de `kubectl apply` do ConfigMap **e** `rollout restart` do gateway (ele só lê as variáveis ao subir).
+- O login fica no `localStorage`, que é por origem: `localhost:3000` e `app.192.168.1.44.nip.io` têm sessões separadas.
 
 O `nip.io` é um DNS público que resolve `<qualquer-coisa>.<IP>.nip.io` pro próprio IP do nome — funciona em qualquer máquina da rede da empresa sem editar `/etc/hosts`, mas precisa de internet pra resolver o nome. Diferente do `port-forward` (túnel até **um pod**), o Ingress aponta pro **Service**, então continua funcionando depois de `rollout restart`. O `port-forward` continua útil pros serviços internos sem Ingress (bancos, auth/catalog via `grpcurl`).
 
